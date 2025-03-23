@@ -24,7 +24,7 @@ io.on('connection', function (socket) {
 });
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '1MB' }));
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const context = ee();
