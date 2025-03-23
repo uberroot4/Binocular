@@ -19,7 +19,11 @@ export async function getCommitTypeList(req, res) {
   }
   const commitsWithTypes = req.body.commits;
   for (const commit of commitsWithTypes) {
-    commit.type = await classifier.predict('' + commit.message, 5);
+    commit.type = (await classifier.predict('' + commit.message, 5)).map((type) => {
+      {
+        return { label: type.label.substring(9), value: type.value };
+      }
+    });
   }
   res.send(JSON.stringify(commitsWithTypes));
 }

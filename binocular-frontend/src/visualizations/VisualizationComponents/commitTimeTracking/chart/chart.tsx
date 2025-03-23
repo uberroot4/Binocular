@@ -51,7 +51,6 @@ export default (props: Props) => {
   const [commitChartData, setCommitChartData] = React.useState<CommitChartData[]>([]);
   const [statistics, setStatistics] = React.useState({});
 
-  console.log(props.chartTimeSpan);
   React.useEffect(() => {
     const fetchData = async () => {
       const extractedData = await extractCommitData(props);
@@ -246,7 +245,6 @@ export default (props: Props) => {
       .append('text')
       .text((d) => (d.data.ratio === 0 ? '' : Math.round(d.data.ratio * 100) / 100 + '%'))
       .attr('transform', (d) => {
-        // @ts-ignore
         const c = arcGenerator.centroid(d);
         const x = c[0];
         const y = c[1];
@@ -325,18 +323,14 @@ const extractCommitData = async (props: Props): Promise<{ commitChartData: Commi
   if (!props.commits || props.commits.length === 0) {
     return { commitChartData: [], statistics: {} };
   }
-
   const filteredCommits = props.commits.filter((value, index, array) => array.findIndex((el) => el.date === value.date) === index);
   const commitsWithDate = filteredCommits.map((commit) => {
     return {
       ...commit,
-      date: new Date(commit.date),
-      commitType: [{ label: 'unknown', value: 1 }],
       timeSpent: { estimated: 0, actual: 0 },
     };
   });
-  await addTypeToCommits(commitsWithDate);
-  const sortedCommits = commitsWithDate.sort((a, b) => a.date.getTime() - b.date.getTime());
+  const sortedCommits: Commit[] = commitsWithDate.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   addActualTime(sortedCommits);
   addEstimatedTime(sortedCommits, props);
   const statistics = calculateStatistics(sortedCommits, props);
@@ -347,16 +341,17 @@ const extractCommitData = async (props: Props): Promise<{ commitChartData: Commi
       commitLink: c.webUrl,
       lineChanges: c.stats.additions + c.stats.deletions,
       commitMessage: c.message,
-      date: c.date,
+      date: new Date(c.date),
       author: c.signature.substring(0, c.signature.indexOf('<') - 1),
       commitSHA: c.sha,
       branch: c.branch,
     };
   });
+  console.log(commitChartData);
   return { commitChartData: commitChartData, statistics: statistics };
 };
 
-function addEstimatedTime(commits: any[], props: Props) {
+function addEstimatedTime(commits: Commit[], props: Props) {
   const firstCommitTime = props.firstCommitTime;
   const maxCommitDiff = props.maxSessionLength;
   const mergedAuthors = [...props.mergedAuthors].filter((author) => props.selectedAuthors.includes(author.mainCommitter));
@@ -365,15 +360,31 @@ function addEstimatedTime(commits: any[], props: Props) {
     if (filteredCommits.length === 0) {
       return;
     }
-    filteredCommits[0].timeSpent.estimated = firstCommitTime;
+    if (filteredCommits[0].timeSpent) {
+      filteredCommits[0].timeSpent.estimated = firstCommitTime;
+    } else {
+      filteredCommits[0].timeSpent = { estimated: firstCommitTime, actual: 0 };
+    }
+    if (filteredCommits.length === 1) {
+      return;
+    }
     let prevCommit = filteredCommits.shift();
     let curCommit = filteredCommits.shift();
     // eslint-disable-next-line eqeqeq
     while (curCommit != null) {
-      if ((curCommit.date.getTime() - prevCommit.date.getTime()) / 1000 / 60 > maxCommitDiff) {
-        curCommit.timeSpent.estimated = firstCommitTime;
+      const curDate = new Date(curCommit.date);
+      // @ts-ignore
+      const prevDate = new Date(prevCommit.date);
+      let estimated;
+      if ((curDate.getTime() - prevDate.getTime()) / 1000 / 60 > maxCommitDiff) {
+        estimated = firstCommitTime;
       } else {
-        curCommit.timeSpent.estimated = Math.round((curCommit.date.getTime() - prevCommit.date.getTime()) / 1000 / 60);
+        estimated = Math.round((curDate.getTime() - prevDate.getTime()) / 1000 / 60);
+      }
+      if (curCommit.timeSpent) {
+        curCommit.timeSpent.estimated = estimated;
+      } else {
+        curCommit.timeSpent = { estimated: estimated, actual: 0 };
       }
       prevCommit = curCommit;
       curCommit = filteredCommits.shift();
@@ -381,7 +392,7 @@ function addEstimatedTime(commits: any[], props: Props) {
   });
 }
 
-function addActualTime(commits: any[]) {
+function addActualTime(commits: Commit[]) {
   return commits.forEach((c) => {
     let timeSpent = 0;
     const regex = 'Time-spent: [0-9]*h[0-9]*m';
@@ -391,28 +402,20 @@ function addActualTime(commits: any[]) {
       const time = timeStamp[0].split(' ')[1];
       timeSpent = +time.substring(0, time.indexOf('h')) * 60 + +time.substring(time.indexOf('h') + 1, time.indexOf('m'));
     }
-    c.timeSpent = { actual: timeSpent };
+    if (c.timeSpent) {
+      c.timeSpent.actual = timeSpent;
+    } else {
+      c.timeSpent = { actual: timeSpent, estimated: 0 };
+    }
   });
 }
 
-async function addTypeToCommits(commits: any[]) {
-  for (const c of commits) {
-    const commitType = await getCommitType(c.message);
-    if (!commitType || commitType.length === 0) {
-      c.commitType = [{ label: 'unknown', value: 1 }];
-    } else {
-      c.commitType = commitType.map((type: { label: string; value: any }) => {
-        return { label: type.label.substring(9), value: type.value };
-      });
-    }
-  }
-}
-
-function filterCommits(commits: any[], props: Props) {
+function filterCommits(commits: Commit[], props: Props) {
   return commits.filter((c) => {
     if (props.selectedBranch && c.branch !== props.selectedBranch) {
       return false;
     }
+    // @ts-ignore
     const commitTime = props.useActualTime ? c.timeSpent.actual : c.timeSpent.estimated;
     if (commitTime < props.threshold.hours.lower || commitTime > props.threshold.hours.upper) {
       return false;
@@ -427,6 +430,8 @@ function filterCommits(commits: any[], props: Props) {
     ) {
       return false;
     }
+    console.log(c);
+    // @ts-ignore
     if (!props.commitType.includes(c.commitType[0].label)) {
       return false;
     }
@@ -446,11 +451,11 @@ function filterCommits(commits: any[], props: Props) {
       return false;
     }
 
-    if (new Date(props.chartTimeSpan.from ?? 0).getTime() > c.date.getTime()) {
+    if (new Date(props.chartTimeSpan.from ?? 0).getTime() > new Date(c.date).getTime()) {
       return false;
     }
 
-    if (new Date(props.chartTimeSpan.to ?? 0).getTime() < c.date.getTime()) {
+    if (new Date(props.chartTimeSpan.to ?? 0).getTime() < new Date(c.date).getTime()) {
       return false;
     }
 

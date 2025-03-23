@@ -10,6 +10,7 @@ import { GlobalState } from '../../../../types/globalTypes';
 import { Commit } from '../../../../types/commitTypes';
 import { Palette } from '../../../../types/authorTypes';
 import { Bounds } from '../../../../types/boundsTypes';
+import { getCommitMessageList } from '../../../../utils/getCommitType.ts';
 
 export const setSelectedBranch = createAction('SET_SELECTED_BRANCH');
 export const setSelectedCommitType = createAction('SET_SELECTED_COMMIT_TYPE');
@@ -116,10 +117,18 @@ export const fetchChangesData = fetchFactory(
       Database.getCommitData([firstCommitTimestamp, lastCommitTimestamp], [firstCommitTimestamp, lastCommitTimestamp]),
       Database.getAllBranches(),
     ])
-      .then((result) => {
+      .then(async (result) => {
         const filteredCommits = result[0];
-        const commits = result[1];
-        //Figure out why there are duplicates in the first place
+        const commits: Commit[] = result[1];
+        if (commits && commits.length > 0) {
+          const commitMessages = commits.map((commit: Commit) => {
+            return { sha: commit.sha, message: commit.message};
+          });
+          const commitTypes = new Map((await getCommitMessageList(commitMessages)).map((o) => [o.sha, o.type]));
+          for (const commit of commits) {
+            commit.commitType = commitTypes.get(commit.sha);
+          }
+        }
         const branches = result[2].branches.data.map((b) => b.branch).filter((value, index, array) => array.indexOf(value) === index);
         const palette = getPalette(commits, 15, bounds.committers.length);
         return {

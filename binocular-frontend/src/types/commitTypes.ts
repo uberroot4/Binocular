@@ -9,6 +9,18 @@ export interface Commit {
   parents: string[];
   webUrl: string;
   stats: Stats;
+  commitType?: CommitType[];
+  timeSpent?: TimeSpent;
+}
+
+interface TimeSpent {
+  estimated: number;
+  actual: number;
+}
+
+interface CommitType {
+  label: string;
+  value: number;
 }
 
 interface Stats {
