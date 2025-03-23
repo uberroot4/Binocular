@@ -20,7 +20,6 @@ export async function getCommitMessageList(commits: { sha: string; message: stri
   const res = await fetch(window.location.protocol + '//' + window.location.hostname + ':48763/api/getCommitType', {
     method: 'POST',
     headers: {
-      'Accept': 'application/json',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ commits: commits }),

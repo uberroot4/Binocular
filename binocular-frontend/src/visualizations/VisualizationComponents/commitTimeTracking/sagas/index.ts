@@ -122,10 +122,11 @@ export const fetchChangesData = fetchFactory(
         const commits: Commit[] = result[1];
         if (commits && commits.length > 0) {
           const commitMessages = commits.map((commit: Commit) => {
-            return { sha: commit.sha, message: commit.message};
+            return { sha: commit.sha, message: commit.message };
           });
           const commitTypes = new Map((await getCommitMessageList(commitMessages)).map((o) => [o.sha, o.type]));
           for (const commit of commits) {
+            // @ts-ignore
             commit.commitType = commitTypes.get(commit.sha);
           }
         }
