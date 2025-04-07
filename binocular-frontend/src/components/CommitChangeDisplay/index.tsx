@@ -96,7 +96,7 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
                   {this.state.commit.messageHeader}
                 </td>
                 <td>
-                  <strong>Bug possibly introduced in: </strong>
+                  <strong>Parent Commits: </strong>
                   {/* TODO: Different kind of links */}
                   {this.state.commit.parents.map((name, index) => (
                     <a key={index} href={`https://github.com/INSO-World/Binocular/commit/${name}`} target={'_blank'}>

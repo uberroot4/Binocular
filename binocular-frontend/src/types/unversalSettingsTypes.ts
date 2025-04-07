@@ -10,6 +10,7 @@ export interface UniversalSettingsConfig {
   hideMergeCommitSettings: boolean;
   hideExcludeCommitSettings: boolean;
   hideSprintSettings: boolean;
+  hideMergeDuplicateAuthorsSettings: boolean;
 }
 
 export interface UniversalSettings {

@@ -41,6 +41,13 @@ export default class Commits {
                       name
                     }
                 }
+                files{
+                 data {
+                   file{
+                     path
+                   }
+                 }
+               }
                }
              }
           }`,

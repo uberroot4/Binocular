@@ -27,8 +27,10 @@ export default (props: Props) => {
             <h1>Filter Manager (regex)</h1>
 
             <h2>
-              Following rules are used as filters for finding bugfix commit. Rules are in regex format and are OR matched. You can delete
-              commits selectively by hovering over the commit in graph. Matching based on regex is case insensitive.
+              {/* eslint-disable-next-line max-len */}
+              Following rules are used as filters for finding bug-fixing commits. Rules are in regex format and are OR matched (either
+              commit message regex holds OR issue regex holds ...). Matching based on regex is case insensitive. <b>Example:</b> [a-z0-9]+
+              is the same as [a-zA-Z0-9]+
             </h2>
             <div className={styles.mb05 + ' ' + styles.p05} id={'commitMessageRegexInput'}>
               <span>Commit Message Regex:</span>

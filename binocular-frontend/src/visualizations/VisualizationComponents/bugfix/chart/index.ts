@@ -26,6 +26,7 @@ interface Props {
   graphSwitch: boolean;
   commitersFromGlobalSettings: any;
   regexConfig: any;
+  activeFiles: any;
 }
 
 const mapStateToProps = (state: GlobalState): Props => {
@@ -51,6 +52,7 @@ const mapStateToProps = (state: GlobalState): Props => {
     excludeCommits: universalSettings.excludeCommits,
     graphSwitch: bugfixState.config.graphSwitch,
     regexConfig: bugfixState.config.regexConfig,
+    activeFiles: bugfixState.config.activeFiles,
   };
 };
 

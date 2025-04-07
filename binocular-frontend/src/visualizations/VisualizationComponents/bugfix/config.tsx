@@ -190,9 +190,16 @@ const BugfixConfigComponent = (props: Props) => {
         {/* select branch, reused code from code-ownership */}
         <div className="field">
           <div className="control">
-            <label className="label">Branch (by default all bugfixes for all branches/files are shown):</label>
+            <label className="label">
+              Branch (by default all bugfixes for all branches/files are shown):
+            </label>
             <div className="select">
-              <select value={props.currentBranchName} onChange={(e) => props.onSetBranch(e.target.value, props.allBranches)}>
+              <select
+                value={props.currentBranchName}
+                onChange={(e) =>
+                  props.onSetBranch(e.target.value, props.allBranches)
+                }
+              >
                 {props.branchOptions}
               </select>
             </div>
@@ -203,10 +210,16 @@ const BugfixConfigComponent = (props: Props) => {
         {props.currentBranch && props.currentBranch.tracksFileRenames !== 'true' && props.currentBranch.tracksFileRenames !== true && (
           <>
             <p>
-              <b>Attention:</b> This branch does <b>not</b> track file renames!
+              <b>Attention:</b> File renames are <b>not</b> tracked!
             </p>
-            <p>If you want to track file renames for this branch, add it to the 'fileRenameBranches' array in
-              '.binocularrc'</p>
+          </>
+        )}
+
+        {props.currentBranch && (
+          <>
+            <p>
+              <b>Bug-Fixes </b> that changed at least one of the selected files will be displayed.
+            </p>
           </>
         )}
 
@@ -215,7 +228,9 @@ const BugfixConfigComponent = (props: Props) => {
         {props.currentBranch && (
           <div className="field">
             <div className="control">
-              <label className="label">Choose Files and Modules to visualize:</label>
+              <label className="label">
+                Choose Files and Modules to visualize:
+              </label>
               <Filepicker
                 fileList={props.files}
                 globalActiveFiles={props.currentActiveFiles}

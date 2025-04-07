@@ -29,6 +29,7 @@ interface Props {
   graphSwitch: boolean;
   commitersFromGlobalSettings: any;
   regexConfig: any;
+  activeFiles: any;
 }
 
 interface BugfixesPerDate {
@@ -61,11 +62,6 @@ export default (props: Props) => {
     }
   };
 
-  // TODO: Merge authors ????
-  // TODO: Update without switch to other graph
-  // TODO: Files
-  // TODO: Delete commits
-
   let preparedCommits: Commit[] = [];
   if (!props.filteredCommits || props.filteredCommits.length === 0) {
     preparedCommits = [];
@@ -91,6 +87,21 @@ export default (props: Props) => {
       for (const commit of preparedCommits) {
         if (commit.branch === props.selectedBranch) {
           tempCommits.push(commit);
+        }
+      }
+      preparedCommits = tempCommits;
+      tempCommits = [];
+    }
+
+    // Filter out commits that do not change at least one of the files
+    if (props.selectedBranch !== undefined) {
+      // All files should be shown
+      for (const commit of preparedCommits) {
+        for (const dataTemp of commit.files.data) {
+          if (props.activeFiles.includes(dataTemp.file.path)) {
+            tempCommits.push(commit);
+            break;
+          }
         }
       }
       preparedCommits = tempCommits;

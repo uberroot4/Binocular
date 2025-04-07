@@ -17,6 +17,7 @@ export default {
   usesUniversalSettings: true,
   universalSettingsConfig: {
     hideMergeCommitSettings: true,
+    hideMergeDuplicateAuthorsSettings: true,
     hideSprintSettings: true,
     hideGranularitySettings: true,
     hideExcludeCommitSettings: true,

@@ -12,6 +12,7 @@ export interface Commit {
   webUrl: string;
   stats: Stats;
   issues: Issue[];
+  files: any;
 }
 
 interface Stats {

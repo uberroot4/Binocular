@@ -36,6 +36,7 @@ export default (props: Props) => {
   const hideMergeCommitSettings = props.universalSettingsConfig.hideMergeCommitSettings;
   const hideExcludeCommitSettings = props.universalSettingsConfig.hideExcludeCommitSettings;
   const hideSprintSettings = props.universalSettingsConfig.hideSprintSettings;
+  const hideMergeDuplicateAuthorsSettings = props.universalSettingsConfig.hideMergeDuplicateAuthorsSettings;
 
   //global state
 
@@ -262,13 +263,15 @@ export default (props: Props) => {
           }}></AuthorList>
       </div>
       <div className={styles.marginTop05}></div>
-      <button
-        className={'button'}
-        onClick={() => {
-          setShowAuthorMerge(true);
-        }}>
-        Merge duplicate Authors
-      </button>
+      {!hideMergeDuplicateAuthorsSettings && (
+        <button
+          className={'button'}
+          onClick={() => {
+            setShowAuthorMerge(true);
+          }}>
+          Merge duplicate Authors
+        </button>
+      )}
       {(!hideMergeCommitSettings || !hideExcludeCommitSettings) && (
         <>
           <h2>Commits</h2>
