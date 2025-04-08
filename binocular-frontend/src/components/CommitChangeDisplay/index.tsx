@@ -25,7 +25,7 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
     this.styles = Object.freeze(Object.assign({}, baseStyles, styles));
     this.state = {
       allChangedFiles: [],
-      currentIndex: 0,
+      currentIndex: -1,
       commit: props.commit,
       componentMounted: false,
     };
@@ -34,14 +34,16 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
   componentDidUpdate(prevProps: Readonly<Props>) {
     if (prevProps.commit['sha'] !== this.props.commit['sha']) {
       this.setState({ currentIndex: 0, commit: this.props.commit });
-      this.fetchAllSourceCode(); // Update the source code once the sha of commit changes
+      // this.setState({ allChangedFiles: [] });
+      this.fetchAllSourceCode(this.props.commit).then((o) => this.setState({ allChangedFiles: o }));
+      // Update the source code once the sha of commit changes
     }
   }
 
   componentDidMount() {
     //Needed to restrict d3 to only access DOM when the component is already mounted
-    this.setState({ componentMounted: true });
-    this.fetchAllSourceCode();
+    this.setState({ currentIndex: 0, commit: this.props.commit, componentMounted: true });
+    this.fetchAllSourceCode(this.props.commit).then((o) => this.setState({ allChangedFiles: o }));
   }
 
   componentWillUnmount() {
@@ -58,7 +60,6 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
     }));
   };
 
-  // TODO: Show just one file now ... (Or prepare at least some DEMO)
   render() {
     // TODO: Display some warning if no content ...
     // TODO: Change classes ....
@@ -116,7 +117,7 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
             <button onClick={this.handleClickNextFile}>&gt;</button>
             <em>
               {' '}
-              {this.state.allChangedFiles.length === 0
+              {this.state.commit && this.state.allChangedFiles.length === 0
                 ? 'There is no code loaded yet'
                 : this.state.allChangedFiles[this.state.currentIndex]['filename']}
             </em>
@@ -127,7 +128,10 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
             id={'codeView'}
             ref={'codeView'}
             value={
-              this.state.allChangedFiles.length === 0 ? 'No code loaded yet' : this.state.allChangedFiles[this.state.currentIndex]['patch']
+              // eslint-disable-next-line max-len
+              this.state.commit && this.state.allChangedFiles.length === 0
+                ? 'No code loaded yet'
+                : this.state.allChangedFiles[this.state.currentIndex]['patch']
             }
             basicSetup={{
               highlightActiveLineGutter: false,
@@ -145,10 +149,10 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
 
   // Based on commit hash and webUrl of the source code, fetches all the files of the source code that were changed
   // In that commit
-  async fetchAllSourceCode() {
+  async fetchAllSourceCode(commit: Commit) {
     // TODO: AUTH for no private repos ??? Maybe do this in backend
-    const commitUrl = this.state.commit.webUrl;
-    const commitSha = this.state.commit.sha;
+    const commitUrl = commit.webUrl;
+    const commitSha = commit.sha;
     if (commitUrl.includes('https://github.com')) {
       // Fetch commit data from api.github.com/repos/... This includes diff patch
       const responseCommitData = await fetch(commitUrl.replace('github.com/', 'api.github.com/repos/').replace('/commit/', '/commits/'));
@@ -169,7 +173,8 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
           preparedFiles.push(fileTemp);
         }
         console.log(preparedFiles);
-        this.setState({ allChangedFiles: preparedFiles });
+        // this.setState({ allChangedFiles: preparedFiles });
+        return preparedFiles;
       }
       // Fetch all the source code from the files in the commit
     }

@@ -8,7 +8,7 @@ import reducer from './reducers';
 
 export default {
   id: 'bugfix',
-  label: 'Bugfix Visualisation',
+  label: 'Bugfix Visualization',
   saga,
   reducer,
   ChartComponent,
