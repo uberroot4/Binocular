@@ -10,6 +10,7 @@ export interface DataPlugin {
   description: string;
   general: DataPluginGeneral;
   commits: DataPluginCommits;
+  sumCommits?: DataPluginCommits;
   builds: DataPluginBuilds;
   users: DataPluginUsers;
   files: DataPluginFiles;
