@@ -190,16 +190,9 @@ const BugfixConfigComponent = (props: Props) => {
         {/* select branch, reused code from code-ownership */}
         <div className="field">
           <div className="control">
-            <label className="label">
-              Branch (by default all bugfixes for all branches/files are shown):
-            </label>
+            <label className="label">Branch (by default all bugfixes for all branches/files are shown):</label>
             <div className="select">
-              <select
-                value={props.currentBranchName}
-                onChange={(e) =>
-                  props.onSetBranch(e.target.value, props.allBranches)
-                }
-              >
+              <select value={props.currentBranchName} onChange={(e) => props.onSetBranch(e.target.value, props.allBranches)}>
                 {props.branchOptions}
               </select>
             </div>
