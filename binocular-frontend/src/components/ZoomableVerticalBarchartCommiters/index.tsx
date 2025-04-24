@@ -168,26 +168,21 @@ export default class ZoomableVerticalBarchartCommiters extends React.Component<P
       .range([marginLeft, width - marginRight])
       .padding(0.05); // Padding between bars
 
-    x.domain(d3.sort(dataYear, yearComparator).map(d => d[key_str]));
+    x.domain(d3.sort(dataYear, yearComparator).map((d) => d[key_str]));
 
     const xAxis = d3.axisBottom(x).tickSizeOuter(0);
 
     // Specifying y-axis
     const y = d3
       .scaleLinear()
-      .domain([0, d3.max(dataYear, d => d[value_str])])
+      .domain([0, d3.max(dataYear, (d) => d[value_str])])
       .nice()
       .range([height - marginBottom, marginTop]);
 
     const yAxis = d3.axisLeft(y);
 
     // SVG Container with zoom function
-    const svg = d3
-      .select(this.svgRef)
-      .attr('viewBox', [0, 0, width, height])
-      .attr('width', width)
-      .attr('height', height)
-      .call(zoom);
+    const svg = d3.select(this.svgRef).attr('viewBox', [0, 0, width, height]).attr('width', width).attr('height', height).call(zoom);
 
     // Append both axes
     svg
@@ -196,7 +191,7 @@ export default class ZoomableVerticalBarchartCommiters extends React.Component<P
       .attr('transform', `translate(0,${height - marginBottom})`)
       .call(xAxis);
     // Make the text on x-axis rotated
-    svg.selectAll('.x-axis').selectAll('text').attr("transform", "translate(0,20)rotate(-35)");
+    svg.selectAll('.x-axis').selectAll('text').attr('transform', 'translate(0,20)rotate(-35)');
 
     svg
       .append('g')
@@ -209,9 +204,9 @@ export default class ZoomableVerticalBarchartCommiters extends React.Component<P
     const changeCommit = this.changeCommit;
     // mode: 'year', 'month' or 'day'
     function updateBarsAndAxes(data, mode) {
-      x.domain(d3.sort(data, yearComparator).map(d => d[key_str]));
+      x.domain(d3.sort(data, yearComparator).map((d) => d[key_str]));
 
-      y.domain([0, d3.max(data, d => d[value_str])]).nice();
+      y.domain([0, d3.max(data, (d) => d[value_str])]).nice();
 
       // Transition y-axis using effects to different scaling
       svg
@@ -255,7 +250,7 @@ export default class ZoomableVerticalBarchartCommiters extends React.Component<P
         svg.selectAll('rect').remove(); // Remove old bars
         updateBarsAndAxes(dataYear, 'year');
 
-        x.range([marginLeft, width - marginRight].map(d => event.transform.applyX(d)));
+        x.range([marginLeft, width - marginRight].map((d) => event.transform.applyX(d)));
         svg
           .selectAll('.bars rect')
           .attr('x', (d) => x(d[key_str]))

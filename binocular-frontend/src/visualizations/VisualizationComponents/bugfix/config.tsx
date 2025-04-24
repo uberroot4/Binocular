@@ -228,9 +228,7 @@ const BugfixConfigComponent = (props: Props) => {
         {props.currentBranch && (
           <div className="field">
             <div className="control">
-              <label className="label">
-                Choose Files and Modules to visualize:
-              </label>
+              <label className="label">Choose Files and Modules to visualize:</label>
               <Filepicker
                 fileList={props.files}
                 globalActiveFiles={props.currentActiveFiles}

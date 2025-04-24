@@ -264,26 +264,21 @@ export default class ZoomableVerticalBarchart extends React.Component<Props, Sta
       .range([marginLeft, width - marginRight])
       .padding(0.05); // Padding between bars
 
-    x.domain(d3.sort(dataYear, yearComparator).map(d => d[key_str])); // at first, set the x-axis to year
+    x.domain(d3.sort(dataYear, yearComparator).map((d) => d[key_str])); // at first, set the x-axis to year
 
     const xAxis = d3.axisBottom(x).tickSizeOuter(0);
 
     // Specifying y-axis
     const y = d3
       .scaleLinear()
-      .domain([0, d3.max(dataYear, d => d[value_str])])
+      .domain([0, d3.max(dataYear, (d) => d[value_str])])
       .nice()
       .range([height - marginBottom, marginTop]);
 
     const yAxis = d3.axisLeft(y);
 
     // SVG Container with zoom function
-    const svg = d3
-      .select(this.svgRef)
-      .attr('viewBox', [0, 0, width, height])
-      .attr('width', width)
-      .attr('height', height)
-      .call(zoom);
+    const svg = d3.select(this.svgRef).attr('viewBox', [0, 0, width, height]).attr('width', width).attr('height', height).call(zoom);
 
     // Append both axes
     svg
@@ -304,13 +299,13 @@ export default class ZoomableVerticalBarchart extends React.Component<Props, Sta
     // mode: 'year', 'month' or 'day'
     function updateBarsAndAxes(data, mode) {
       if (mode === 'year') {
-        x.domain(d3.sort(data, yearComparator).map(d => d[key_str]));
+        x.domain(d3.sort(data, yearComparator).map((d) => d[key_str]));
       } else if (mode === 'month') {
-        x.domain(d3.sort(data, monthComparator).map(d => d[key_str]));
+        x.domain(d3.sort(data, monthComparator).map((d) => d[key_str]));
       } else {
-        x.domain(d3.sort(data, dayComparator).map(d => d[key_str]));
+        x.domain(d3.sort(data, dayComparator).map((d) => d[key_str]));
       }
-      y.domain([0, d3.max(data, d => d[value_str])]).nice();
+      y.domain([0, d3.max(data, (d) => d[value_str])]).nice();
 
       // Transition y-axis using effects to different scaling
       svg
@@ -365,7 +360,7 @@ export default class ZoomableVerticalBarchart extends React.Component<Props, Sta
           currentLevel = 'year';
         }
 
-        x.range([marginLeft, width - marginRight].map(d => event.transform.applyX(d)));
+        x.range([marginLeft, width - marginRight].map((d) => event.transform.applyX(d)));
         svg
           .selectAll('.bars rect')
           .attr('x', (d) => x(d[key_str]))
