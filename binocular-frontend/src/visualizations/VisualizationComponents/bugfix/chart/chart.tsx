@@ -199,11 +199,19 @@ const prepareByDateCommits = (commitsSorted: Commit[]): BugfixesPerDate[] => {
   for (const commit of commitsSorted) {
     // Count all commits in that day and add the commit data to the right date
     const date = new Date(commit.date); // Converting the string into Date object
-    if (`${date.getFullYear()}-${date.getMonth() + 1}-${date.getUTCDate()}` in temp) {
-      temp[`${date.getFullYear()}-${date.getMonth() + 1}-${date.getUTCDate()}`]['count'] += 1;
-      temp[`${date.getFullYear()}-${date.getMonth() + 1}-${date.getUTCDate()}`]['commits'].push(commit);
+
+    const year = date.getFullYear();
+    // Pad both month and day so that it works on Safari
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    const tempDateString = `${year}-${month}-${day}`;
+
+    if (tempDateString in temp) {
+      temp[tempDateString]['count'] += 1;
+      temp[tempDateString]['commits'].push(commit);
     } else {
-      temp[`${date.getFullYear()}-${date.getMonth() + 1}-${date.getUTCDate()}`] = { count: 1, commits: [commit] };
+      temp[tempDateString] = { count: 1, commits: [commit] };
     }
   }
 
@@ -215,7 +223,7 @@ const prepareByDateCommits = (commitsSorted: Commit[]): BugfixesPerDate[] => {
   for (const k of Object.keys(temp)) {
     const date = new Date(k);
     out.push({
-      date: new Date(`${date.getFullYear()}-${date.getMonth() + 1}-${date.getUTCDate()}`),
+      date: date,
       bugfixes_count: temp[k]['count'],
       commits: temp[k]['commits'],
     });

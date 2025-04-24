@@ -115,11 +115,18 @@ export default class ZoomableVerticalBarchart extends React.Component<Props, Sta
     const temp: any = new Date(minDay);
     console.log('First ... ' + temp);
     while (temp < maxDay) {
+      const year = temp.getFullYear();
+      // Pad both month and day so that it works on Safari
+      const month = String(temp.getMonth() + 1).padStart(2, '0');
+      const day = String(temp.getDate()).padStart(2, '0');
+
+      const tempDateString = `${year}-${month}-${day}`;
+
       data.push({
-        date: new Date(`${temp.getFullYear()}-${temp.getMonth() + 1}-${temp.getUTCDate()}`),
+        date: new Date(tempDateString),
         year: temp.getFullYear(),
         month: temp.getMonth(),
-        day: temp.getUTCDate(),
+        day: temp.getDate(),
         bugfixes_count: 0,
         commits: [],
       });
