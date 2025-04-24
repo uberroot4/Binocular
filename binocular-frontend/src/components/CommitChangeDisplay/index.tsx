@@ -164,7 +164,17 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
           const requestedCode = await fetch(
             decodeURIComponent(fileData['raw_url'].replace('github.com/', 'raw.githubusercontent.com/').replace('/raw/', '/')),
           );
-          // TODO: Error handling in case of Unauthenificated Requests (403 forbidden)
+          if (!requestedCode.ok) {
+            // Probably rate limited or private repo (403 forbidden)
+            return [
+              {
+                filename: 'There was an error while fetching diffs, try again later.',
+                patch: 'There was an error while fetching diffs, try again later',
+                code: 'There was an error while fetching diffs, try again later',
+              },
+            ];
+          }
+
           const fileTemp = {
             filename: fileData.filename,
             patch: fileData.patch,
@@ -175,8 +185,25 @@ export default class CommitChangeDisplay extends React.Component<Props, State> {
         console.log(preparedFiles);
         // this.setState({ allChangedFiles: preparedFiles });
         return preparedFiles;
+      } else {
+        // Probably rate limited or private repo
+        return [
+          {
+            filename: 'There was an error while fetching diffs, try again later',
+            patch: 'There was an error while fetching diffs, try again later',
+            code: 'There was an error while fetching diffs, try again later',
+          },
+        ];
       }
       // Fetch all the source code from the files in the commit
+    } else {
+      return [
+        {
+          filename: 'This VCS type is not supported in commit viewer',
+          patch: 'This VCS type is not supported in commit viewer',
+          code: 'This VCS type is not supported in commit viewer',
+        },
+      ];
     }
     // TODO: Other VCS
   }
