@@ -154,9 +154,9 @@ export default class ZoomableVerticalBarchartCommiters extends React.Component<P
     // Basic chart dimensions
     const width = 945;
     const height = 525;
-    const marginTop = 10;
+    const marginTop = 50;
     const marginRight = 10;
-    const marginBottom = 10;
+    const marginBottom = 70;
     const marginLeft = 50;
 
     // Specify different comparators for different granularity
