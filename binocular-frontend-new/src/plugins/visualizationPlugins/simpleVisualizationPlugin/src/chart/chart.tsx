@@ -1,4 +1,5 @@
 import { StackedAreaChart } from './stackedAreaChart.tsx';
+import { ColumnChart } from './columnChart.tsx';
 import { useEffect, useState } from 'react';
 import { throttle } from 'throttle-debounce';
 import { useDispatch, useSelector } from 'react-redux';
@@ -36,6 +37,13 @@ function Chart<SettingsType extends DefaultSettings, DataType>(props: Properties
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [chartScale, setChartScale] = useState<number[]>([]);
   const [chartPalette, setChartPalette] = useState<Palette>({});
+
+  const chartRegistry: Record<string, typeof StackedAreaChart> = {
+    commits: StackedAreaChart,
+    sumCommits: ColumnChart,
+  };
+
+  const ChartRenderer = chartRegistry[props.dataName ?? ''] ?? StackedAreaChart;
 
   /*
   Throttle the resize of the svg (refresh rate) to every 1s to not overwhelm the renderer,
@@ -95,7 +103,7 @@ function Chart<SettingsType extends DefaultSettings, DataType>(props: Properties
           </div>
         )}
         {dataState === DataState.COMPLETE && (
-          <StackedAreaChart
+          <ChartRenderer
             data={chartData}
             scale={chartScale}
             palette={chartPalette}
