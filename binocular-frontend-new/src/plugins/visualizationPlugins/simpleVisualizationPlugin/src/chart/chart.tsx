@@ -12,6 +12,11 @@ export interface ChartData {
   [signature: string]: number;
 }
 
+export interface BarChartData {
+  user: string;
+  value: number;
+}
+
 export interface Palette {
   [signature: string]: { main: string; secondary: string };
 }
