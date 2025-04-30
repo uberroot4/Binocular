@@ -11,8 +11,8 @@ export interface ChangesSettings extends DefaultSettings {
   splitAdditionsDeletions: boolean;
 }
 
-export interface SumSettings extends DefaultSettings {
-  splitAdditionsDeletions: boolean;
+export interface SumSettings {
+  showMean: boolean;
 }
 
 function Settings(props: { settings: BuildSettings; setSettings: (newSettings: BuildSettings) => void }) {
