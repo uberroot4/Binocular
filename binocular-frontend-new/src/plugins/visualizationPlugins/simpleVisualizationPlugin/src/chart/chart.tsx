@@ -39,16 +39,12 @@ function Chart<SettingsType extends DefaultSettings, DataType>(props: Properties
   const [chartWidth, setChartWidth] = useState(100);
   const [chartHeight, setChartHeight] = useState(100);
 
-  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const ChartRenderer = props.dataName === 'sumCommits' ? ColumnChart : StackedAreaChart;
+  type AreaOrBarChart = ChartData | BarChartData;
+
+  const [chartData, setChartData] = useState<AreaOrBarChart[]>([]);
   const [chartScale, setChartScale] = useState<number[]>([]);
   const [chartPalette, setChartPalette] = useState<Palette>({});
-
-  const chartRegistry: Record<string, typeof StackedAreaChart> = {
-    commits: StackedAreaChart,
-    sumCommits: ColumnChart,
-  };
-
-  const ChartRenderer = chartRegistry[props.dataName ?? ''] ?? StackedAreaChart;
 
   /*
   Throttle the resize of the svg (refresh rate) to every 1s to not overwhelm the renderer,
@@ -109,7 +105,7 @@ function Chart<SettingsType extends DefaultSettings, DataType>(props: Properties
         )}
         {dataState === DataState.COMPLETE && (
           <ChartRenderer
-            data={chartData}
+            data={chartData as never}
             scale={chartScale}
             palette={chartPalette}
             sprintList={props.sprintList}
