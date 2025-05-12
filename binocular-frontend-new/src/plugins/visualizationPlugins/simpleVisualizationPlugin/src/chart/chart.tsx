@@ -15,6 +15,7 @@ export interface ChartData {
 export interface BarChartData {
   user: string;
   value: number;
+  avgCommitsPerWeek: number;
 }
 
 export interface Palette {
