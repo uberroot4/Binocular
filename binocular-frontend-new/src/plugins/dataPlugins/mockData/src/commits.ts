@@ -112,6 +112,36 @@ export default class Commits implements DataPluginCommits {
           webUrl: 'www.github.com',
           stats: { additions: 20, deletions: 0 },
         },
+        {
+          sha: '0000000008',
+          shortSha: '00008',
+          messageHeader: 'Commit 8',
+          message: 'This is the eighth Commit',
+          user: {
+            id: '2',
+            gitSignature: 'tester2@github.com',
+          },
+          branch: 'main',
+          date: '2025-01-01T11:00:00.000Z',
+          parents: ['0000000007'],
+          webUrl: 'www.github.com',
+          stats: { additions: 1, deletions: 0 },
+        },
+        {
+          sha: '0000000009',
+          shortSha: '00009',
+          messageHeader: 'Commit 9',
+          message: 'This is the ninth Commit',
+          user: {
+            id: '2',
+            gitSignature: 'tester2@github.com',
+          },
+          branch: 'main',
+          date: '2025-01-01T11:00:00.000Z',
+          parents: ['0000000007'],
+          webUrl: 'www.github.com',
+          stats: { additions: 1, deletions: 0 },
+        },
       ];
       resolve(commits);
     });
