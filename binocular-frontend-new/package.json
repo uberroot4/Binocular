@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build-pouchdb": "PRE_CONFIGURE_DB=pouchdb NODE_OPTIONS=--max-old-space-size=32768 vite build",
+    "build:offline": "PRE_CONFIGURE_DB=pouchdb NODE_OPTIONS=--max-old-space-size=32768 vite build",
     "lint": "eslint binocular --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -67,5 +67,8 @@
     "vite-plugin-conditional-compiler": "^0.3.1",
     "vite-plugin-node-polyfills": "^0.22.0",
     "vite-plugin-singlefile": "^2.0.3"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-musl": "4.32.0"
   }
 }
