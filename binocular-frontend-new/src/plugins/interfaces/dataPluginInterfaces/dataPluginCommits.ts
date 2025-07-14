@@ -2,6 +2,7 @@ import { DataPluginUser } from './dataPluginUsers.ts';
 
 export interface DataPluginCommits {
   getAll: (from: string, to: string) => Promise<DataPluginCommit[]>;
+  getCommitDataWithFilesAndOwnership?: (commitSpan: [Date, Date], significantSpan: [Date, Date]) => Promise<any[]>;
 }
 
 export interface DataPluginCommit {
