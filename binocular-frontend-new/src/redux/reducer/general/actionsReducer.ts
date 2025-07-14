@@ -3,6 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 export interface ActionsInitialState {
   lastAction: string | undefined;
   payload?: unknown;
+  changeFrequencyData?: any[];
 }
 
 const initialState: ActionsInitialState = {
