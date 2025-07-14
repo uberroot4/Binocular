@@ -26,18 +26,62 @@ interface CommitQueryResult {
   };
 }
 
+interface CommitWithFilesQueryResult {
+  repository: {
+    defaultBranchRef: {
+      target: {
+        history: {
+          totalCount: number;
+          pageInfo: { endCursor: string; hasNextPage: boolean };
+          nodes: {
+            oid: string;
+            messageHeadline: string;
+            message: string;
+            committedDate: string;
+            url: string;
+            deletions: number;
+            additions: number;
+            changedFilesIfAvailable: number;
+            author: { user: { id: string; login: string } };
+            parents: { totalCount: number; nodes: { oid: string }[] };
+            associatedPullRequests: {
+              nodes: {
+                files: {
+                  nodes: {
+                    path: string;
+                    additions: number;
+                    deletions: number;
+                  }[];
+                };
+              }[];
+            };
+          }[];
+        };
+      };
+    };
+  };
+}
+
 export default class Commits implements DataPluginCommits {
   private graphQl;
   private owner;
   private name;
+  private apiKey;
+
   constructor(apiKey: string, endpoint: string) {
     this.graphQl = new GraphQL(apiKey);
+    this.apiKey = apiKey;
     this.owner = endpoint.split('/')[0];
     this.name = endpoint.split('/')[1];
   }
   public async getAll(from: string, to: string) {
     return await Promise.resolve(this.getCommits(100, new Date(from).toISOString(), new Date(to).toISOString()));
   }
+
+  public async getCommitDataWithFilesAndOwnership(commitSpan: [Date, Date], significantSpan: [Date, Date]) {
+    return await this.getCommitsWithFiles(100, significantSpan[0].toISOString(), significantSpan[1].toISOString());
+  }
+
   private async getCommits(perPage: number, from: string, to: string): Promise<DataPluginCommit[]> {
     let hasNextPage: boolean = true;
     let nextPageCursor: string | null = null;
@@ -120,6 +164,165 @@ export default class Commits implements DataPluginCommits {
       }
     }
 
+    return commitNodes;
+  }
+
+  private async getCommitsWithFiles(perPage: number, from: string, to: string): Promise<any[]> {
+    let hasNextPage: boolean = true;
+    let nextPageCursor: string | null = null;
+    const commitNodes: any[] = [];
+
+    while (hasNextPage) {
+      const resp: ApolloQueryResult<CommitWithFilesQueryResult> | undefined = await this.graphQl.client
+        .query<
+          CommitWithFilesQueryResult,
+          { nextPageCursor: string | null; perPage: number; from: string; to: string; owner: string; name: string }
+        >({
+          query: gql`
+            query ($nextPageCursor: String, $perPage: Int, $from: GitTimestamp, $to: GitTimestamp, $owner: String!, $name: String!) {
+              repository(owner: $owner, name: $name) {
+                defaultBranchRef {
+                  target {
+                    ... on Commit {
+                      history(after: $nextPageCursor, first: $perPage, since: $from, until: $to) {
+                        pageInfo {
+                          endCursor
+                          hasNextPage
+                        }
+                        totalCount
+                        nodes {
+                          oid
+                          messageHeadline
+                          message
+                          committedDate
+                          url
+                          deletions
+                          additions
+                          changedFilesIfAvailable
+                          author {
+                            user {
+                              id
+                              login
+                            }
+                          }
+                          parents(first: 100) {
+                            totalCount
+                            nodes {
+                              oid
+                            }
+                          }
+                          associatedPullRequests(first: 1) {
+                            nodes {
+                              files(first: 100) {
+                                nodes {
+                                  path
+                                  additions
+                                  deletions
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          `,
+          variables: { nextPageCursor, perPage, from, to, owner: this.owner, name: this.name },
+        })
+        .catch((e) => {
+          console.log('Error fetching commits with files:', e);
+          return undefined;
+        });
+
+      if (resp?.data?.repository?.defaultBranchRef?.target?.history) {
+        const history: CommitWithFilesQueryResult['repository']['defaultBranchRef']['target']['history'] =
+          resp.data.repository.defaultBranchRef.target.history;
+
+        for (const commit of history.nodes) {
+          if (!commit.author?.user) {
+            continue;
+          }
+
+          let files: any[] = [];
+          const hasAssociatedPR = commit.associatedPullRequests?.nodes?.length > 0;
+
+          if (hasAssociatedPR) {
+            const prFiles = commit.associatedPullRequests.nodes[0]?.files?.nodes || [];
+            files = prFiles.map((file: any) => ({
+              file: {
+                path: file.path,
+              },
+              lineCount: undefined,
+              stats: {
+                additions: file.additions,
+                deletions: file.deletions,
+              },
+              ownership: [],
+              hunks: [],
+            }));
+          } else {
+            try {
+              const response = await fetch(`https://api.github.com/repos/${this.owner}/${this.name}/commits/${commit.oid}`, {
+                headers: {
+                  Authorization: `token ${this.apiKey}`,
+                  Accept: 'application/vnd.github.v3+json',
+                },
+              });
+
+              if (response.ok) {
+                const commitData = await response.json();
+                files =
+                  commitData.files?.map((file: any) => ({
+                    file: {
+                      path: file.filename,
+                    },
+                    lineCount: undefined,
+                    stats: {
+                      additions: file.additions || 0,
+                      deletions: file.deletions || 0,
+                    },
+                    ownership: [],
+                    hunks: [],
+                  })) || [];
+              } else {
+                console.log(`REST API failed for commit ${commit.oid.substring(0, 7)}: ${response.status}`);
+                files = [];
+              }
+            } catch (error) {
+              console.log(`Error fetching files for commit ${commit.oid.substring(0, 7)}:`, error);
+              files = [];
+            }
+          }
+
+          const transformedCommit = {
+            sha: commit.oid,
+            date: commit.committedDate,
+            signature: commit.author.user.login,
+            branch: '',
+            message: commit.message,
+            webUrl: commit.url,
+            parents: commit.parents.nodes.map((parent: any) => parent.oid),
+            stats: {
+              additions: commit.additions,
+              deletions: commit.deletions,
+            },
+            files: {
+              data: files,
+            },
+          };
+
+          commitNodes.push(transformedCommit);
+        }
+
+        nextPageCursor = history.pageInfo.endCursor;
+        hasNextPage = history.pageInfo.hasNextPage;
+      } else {
+        hasNextPage = false;
+      }
+    }
     return commitNodes;
   }
 }
