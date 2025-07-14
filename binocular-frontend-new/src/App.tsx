@@ -32,6 +32,8 @@ import DatabaseLoaders from './utils/databaseLoaders.ts';
 import OverlayController from './components/overlayController/overlayController.tsx';
 import FileSearch from './components/tabs/fileTree/fileSearch/fileSearch.tsx';
 import { TabAlignment } from './types/general/tabType.ts';
+import HierarchyTab from './plugins/visualizationPlugins/change-frequency/src/tabs/hierarchyTab';
+import { DashboardItemType } from './types/general/dashboardItemType';
 
 function App() {
   // #v-ifdef PRE_CONFIGURE_DB=='pouchdb'
@@ -62,6 +64,9 @@ function App() {
 
   const storedTheme = localStorage.getItem('theme');
   const [theme, setTheme] = useState(storedTheme || 'binocularLight');
+
+  const dashboardItems = useSelector((state: RootState) => state.dashboard.dashboardItems);
+  const isChangeFrequencyActive = dashboardItems.some((item: DashboardItemType) => item.pluginName === 'Change Frequency');
 
   useEffect(() => {
     // #v-ifdef PRE_CONFIGURE_DB=='pouchdb'
@@ -162,6 +167,13 @@ function App() {
               <FileList search={fileSearch}></FileList>
             </TabSection>
           </Tab>
+          {isChangeFrequencyActive && (
+            <Tab displayName={'Change Frequency'} alignment={TabAlignment.right}>
+              <TabSection name={'Hierarchy'}>
+                <HierarchyTab />
+              </TabSection>
+            </Tab>
+          )}
           <Tab displayName={'Help'} alignment={TabAlignment.right}>
             <TabSection name={'General'}>
               <HelpGeneral></HelpGeneral>
