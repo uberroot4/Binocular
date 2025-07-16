@@ -18,6 +18,9 @@ module.exports = new gql.GraphQLObjectType({
   description: 'A single git commit',
   fields() {
     return {
+      _id: {
+        type: new gql.GraphQLNonNull(gql.GraphQLString),
+      },
       sha: {
         type: new gql.GraphQLNonNull(gql.GraphQLString),
       },
