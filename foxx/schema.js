@@ -23,6 +23,7 @@ const branches = db._collection('branches');
 const mergeRequests = db._collection('mergeRequests');
 const milestones = db._collection('milestones');
 const jacocoReports = db._collection('jacocoReports');
+const commitsFiles = db._collection('commits-files');
 
 const queryType = new gql.GraphQLObjectType({
   name: 'Query',
@@ -296,6 +297,18 @@ const queryType = new gql.GraphQLObjectType({
             ${limit}
             RETURN jacocoReport`;
         },
+      }),
+      commitsFilesConnections: paginated({
+        type: require('./types/commitsFilesConnections.js'),
+        args: {
+          sort: { type: Sort },
+          until: { type: Timestamp },
+        },
+        query: (root, args, limit) => {
+          return aql`
+            FOR edge IN ${commitsFiles} RETURN edge
+          `;
+        }
       })
     };
   },
