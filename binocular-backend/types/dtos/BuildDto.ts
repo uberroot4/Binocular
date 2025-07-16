@@ -2,7 +2,7 @@ import Job from '../supportingTypes/Job.ts';
 import Artifact from '../supportingTypes/Artifact.ts';
 
 export default interface BuildDto {
-  id: string;
+  id: number;
   user: string;
   userFullName: string;
   committedAt: string;

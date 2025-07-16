@@ -5,6 +5,10 @@ import Files from './files.ts';
 import Users from './users.ts';
 import JacocoReports from './jacocoReports.ts';
 import CommitsFilesConnections from './commitsFilesConnections.ts';
+import { FileConfig } from '../../../interfaces/dataPluginInterfaces/dataPluginFiles.ts';
+import { ProgressUpdateConfig } from '../../../../types/settings/databaseSettingsType.ts';
+import Builds from './builds.ts';
+import Branches from './branches.ts';
 
 class BinocularBackend implements DataPlugin {
   public name = 'Binocular Backend';
@@ -15,31 +19,43 @@ class BinocularBackend implements DataPlugin {
     apiKey: false,
     endpoint: true,
     file: false,
+    progressUpdate: true,
   };
   public commits;
+  public builds;
   public users;
   public general;
   public files;
+  public branches;
   public jacocoReports;
   public commitsFilesConnections;
 
   constructor() {
     this.commits = new Commits('/graphQl');
+    this.builds = new Builds('/graphQl');
     this.users = new Users('/graphQl');
-    this.general = new General(/*'/graphQl'*/);
+    this.general = new General('/graphQl', undefined);
     this.files = new Files('/graphQl');
     this.jacocoReports = new JacocoReports('/graphQl');
     this.commitsFilesConnections = new CommitsFilesConnections('/graphQl');
+    this.branches = new Branches('/graphQl');
   }
 
-  public async init(apiKey: string | undefined, endpoint: string | undefined) {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  public async init(
+    apiKey: string | undefined,
+    endpoint: string | undefined,
+    _file: FileConfig | undefined,
+    progressUpdateConfig: ProgressUpdateConfig | undefined,
+  ) {
     console.log(`Init Binocular Backend with ApiKey: ${apiKey} and Endpoint ${endpoint}`);
     if (endpoint === undefined || endpoint.length === 0) {
       endpoint = '/graphQl';
     }
     this.commits = new Commits(endpoint);
+    this.builds = new Builds(endpoint);
     this.users = new Users(endpoint);
-    this.general = new General(/*endpoint*/);
+    this.general = new General(endpoint, progressUpdateConfig);
     this.files = new Files(endpoint);
     this.jacocoReports = new JacocoReports(endpoint);
     this.commitsFilesConnections = new CommitsFilesConnections(endpoint);
