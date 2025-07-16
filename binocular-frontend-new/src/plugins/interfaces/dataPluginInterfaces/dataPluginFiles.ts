@@ -3,6 +3,7 @@ export interface DataPluginFiles {
 }
 
 export interface DataPluginFile {
+  _id: string;
   path: string;
   webUrl: string;
   maxLength: number;

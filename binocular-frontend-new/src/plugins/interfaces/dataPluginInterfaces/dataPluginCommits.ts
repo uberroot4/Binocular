@@ -5,6 +5,7 @@ export interface DataPluginCommits {
 }
 
 export interface DataPluginCommit {
+  _id: string;
   sha: string;
   shortSha: string;
   messageHeader: string;
