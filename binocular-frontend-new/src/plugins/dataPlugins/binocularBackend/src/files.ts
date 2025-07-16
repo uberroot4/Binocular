@@ -21,6 +21,7 @@ export default class Files implements DataPluginFiles {
               page
               perPage
               data {
+                _id
                 path
                 webUrl
                 maxLength

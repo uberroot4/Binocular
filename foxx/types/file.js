@@ -15,6 +15,9 @@ module.exports = new gql.GraphQLObjectType({
   description: 'A file in the git-repository',
   fields() {
     return {
+      _id: {
+        type: new gql.GraphQLNonNull(gql.GraphQLString),
+      },
       id: {
         type: new gql.GraphQLNonNull(gql.GraphQLString),
         resolve: (e) => e._key,
