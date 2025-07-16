@@ -4,6 +4,7 @@ import General from './general.ts';
 import Files from './files.ts';
 import Users from './users.ts';
 import JacocoReports from './jacocoReports.ts';
+import CommitsFilesConnections from './commitsFilesConnections.ts';
 
 class BinocularBackend implements DataPlugin {
   public name = 'Binocular Backend';
@@ -20,6 +21,7 @@ class BinocularBackend implements DataPlugin {
   public general;
   public files;
   public jacocoReports;
+  public commitsFilesConnections;
 
   constructor() {
     this.commits = new Commits('/graphQl');
@@ -27,6 +29,7 @@ class BinocularBackend implements DataPlugin {
     this.general = new General(/*'/graphQl'*/);
     this.files = new Files('/graphQl');
     this.jacocoReports = new JacocoReports('/graphQl');
+    this.commitsFilesConnections = new CommitsFilesConnections('/graphQl');
   }
 
   public async init(apiKey: string | undefined, endpoint: string | undefined) {
@@ -39,6 +42,7 @@ class BinocularBackend implements DataPlugin {
     this.general = new General(/*endpoint*/);
     this.files = new Files(endpoint);
     this.jacocoReports = new JacocoReports(endpoint);
+    this.commitsFilesConnections = new CommitsFilesConnections(endpoint);
   }
 
   public async clearRemains() {}
