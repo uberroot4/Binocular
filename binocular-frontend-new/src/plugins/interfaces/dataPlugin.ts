@@ -3,6 +3,7 @@ import { DataPluginCommits } from './dataPluginInterfaces/dataPluginCommits.ts';
 import { DataPluginUsers } from './dataPluginInterfaces/dataPluginUsers.ts';
 import { DataPluginFiles } from './dataPluginInterfaces/dataPluginFiles.ts';
 import { DataPluginJacocoReports } from './dataPluginInterfaces/dataPluginArtifacts.ts';
+import { DataPluginCommitsFilesConnections } from './dataPluginInterfaces/dataPluginCommitsFilesConnections.ts';
 
 export interface DataPlugin {
   name: string;
@@ -21,4 +22,5 @@ export interface DataPlugin {
     file: { name: string | undefined; file: File | undefined } | undefined,
   ) => Promise<void>;
   clearRemains: () => Promise<void>;
+  commitsFilesConnections: DataPluginCommitsFilesConnections;
 }
