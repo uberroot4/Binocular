@@ -6,8 +6,9 @@ import { getSVGData } from './utilities/utilities.ts';
 import Reducer from './reducer';
 import Saga from './saga';
 import Help from './help/help.tsx';
+import { VisualizationPluginMetadataCategory } from '../../../interfaces/visualizationPluginInterfaces/visualizationPluginMetadata.ts';
 
-const TestCommitHistory: VisualizationPlugin<SettingsType> = {
+const TestCommitHistory: VisualizationPlugin<SettingsType, null> = {
   name: 'Test Commit History',
   chartComponent: Chart,
   settingsComponent: Settings,
@@ -22,6 +23,9 @@ const TestCommitHistory: VisualizationPlugin<SettingsType> = {
   },
   images: {
     thumbnail: PreviewImage,
+  },
+  metadata: {
+    category: VisualizationPluginMetadataCategory.Tests,
   },
   reducer: Reducer,
   saga: Saga,
