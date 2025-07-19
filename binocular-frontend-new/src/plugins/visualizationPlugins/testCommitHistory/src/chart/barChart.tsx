@@ -16,7 +16,6 @@ type LineChartProps = {
 export const BarChart = ({ width, height, dateRange, data }: LineChartProps) => {
   const boundsWidth = width - MARGIN.right - MARGIN.left;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
-  const [hovered, setHovered] = useState(false);
 
   // States for handling brushing
   const [isBrushing, setIsBrushing] = useState(false);
@@ -25,7 +24,6 @@ export const BarChart = ({ width, height, dateRange, data }: LineChartProps) => 
 
   // X scale
   const times: [Date, Date] = [new Date(dateRange.from), new Date(dateRange.to)];
-  const dateDomain = d3.extent(times);
   const [domain, setDomain] = useState<[Date | undefined, Date | undefined]>(times);
   const defaultStart = new Date();
   const defaultEnd = new Date();
@@ -133,23 +131,7 @@ export const BarChart = ({ width, height, dateRange, data }: LineChartProps) => 
           position: 'absolute',
           top: 5,
           right: 5,
-        }}>
-        <button
-          onClick={() => setDomain(dateDomain)}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-          style={{
-            backgroundColor: hovered ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)',
-            color: 'rgba(0,0,0,0.6)',
-            border: '2px solid rgba(0,0,0,0.1)',
-            padding: '0.25rem 0.25rem',
-            borderRadius: '0.5rem',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-          }}>
-          Reset
-        </button>
-      </div>
+        }}></div>
     </div>
   );
 };
