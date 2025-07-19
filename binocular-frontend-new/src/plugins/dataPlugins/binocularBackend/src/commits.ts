@@ -22,6 +22,7 @@ export default class Commits implements DataPluginCommits {
                 page
                 perPage
                 data {
+                  _id
                   sha
                   shortSha
                   message
