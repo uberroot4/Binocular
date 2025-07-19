@@ -46,8 +46,21 @@ export interface GitlabNode {
   finishedAt: string;
   status: string;
   stage: GitlabStage;
+  artifacts: GitlabNodes;
 }
 
 export interface GitlabStage {
   name: string;
+}
+
+export interface GitlabNodes {
+  nodes: GitlabArtifact[];
+}
+
+export interface GitlabArtifact {
+  id: string;
+  name: string;
+  downloadUrl: string;
+  fileType: string;
+  size: number;
 }

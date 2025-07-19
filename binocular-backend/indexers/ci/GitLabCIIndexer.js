@@ -5,7 +5,7 @@ import _ from 'lodash';
 import Build from '../../models/models/Build';
 
 import BaseGitLabIndexer from '../BaseGitLabIndexer.js';
-import CIIndexer from './CIIndexer.js';
+import CIIndexer from './CIIndexer.ts';
 import JacocoReport from '../../models/models/JacocoReport';
 
 class GitLabCIIndexer extends BaseGitLabIndexer {

@@ -65,7 +65,7 @@ class GitHubCIIndexer {
     }
     await this.controller.loadAssignableUsers(this.owner, this.repo);
 
-    this.indexer = new CIIndexer(this.reporter, this.controller, repoName, async (pipeline, jobs, artifacts: GithubArtifact[]) => {
+    this.indexer = new CIIndexer(this.reporter, this.controller, repoName, async (pipeline, jobs, artifacts) => {
       jobs = (jobs as GithubJob[]) || [];
       pipeline = pipeline as GithubRun;
       artifacts = artifacts || [];

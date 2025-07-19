@@ -1,6 +1,6 @@
 import GitHub from '../../core/provider/github.ts';
 import ProgressReporter from '../../utils/progress-reporter.ts';
-import { GithubJob, GithubRun } from '../../types/GithubTypes.ts';
+import { GithubArtifact, GithubJob, GithubRun } from '../../types/GithubTypes.ts';
 import Build from '../../models/models/Build.ts';
 import ctx from '../../utils/context.ts';
 import debug from 'debug';
@@ -14,7 +14,7 @@ class CIIndexer {
   private controller: GitHub | GitLab;
   private reporter: typeof ProgressReporter;
   private projectId: string;
-  private buildMapper: (build: GithubRun | GitlabPipeline, jobs: GithubJob[] | GitlabNode[]) => Promise<void>;
+  private buildMapper: (build: GithubRun | GitlabPipeline, jobs: GithubJob[] | GitlabNode[], artefacts: any[]) => Promise<void>;
   private stopping: boolean;
   private omitCount: number;
   private persistCount: number;
@@ -23,7 +23,7 @@ class CIIndexer {
     reporter: typeof ProgressReporter,
     controller: GitHub | GitLab,
     projectId: string,
-    createBuildArtifactHandler: (build: GithubRun | GitlabPipeline, jobs: GithubJob[] | GitlabNode[]) => Promise<void>,
+    createBuildArtifactHandler: (build: GithubRun | GitlabPipeline, jobs: GithubJob[] | GitlabNode[], artefacts: any[]) => Promise<void>,
   ) {
     this.reporter = reporter;
     this.controller = controller;
@@ -112,7 +112,18 @@ class CIIndexer {
                 log(`Processing build #${build.id} [${this.persistCount + this.omitCount}]`);
                 return Promise.resolve(await this.controller.getPipelineJobs(projectId, build.id))
                   .then((jobs: GithubJob[]) => {
-                    return this.buildMapper(build, jobs);
+                    if (this.controller instanceof GitHub) {
+                      return this.controller.getPipelineArtifacts(projectId, build.id).then((artifacts: GithubArtifact[]) => {
+                        if (artifacts.length > 0) {
+                          log(`Found ${artifacts.length} artifacts for build #${build.id}`);
+                        } else {
+                          log(`No artifacts found for build #${build.id}`);
+                        }
+                        return this.buildMapper(build, jobs, artifacts);
+                      });
+                    } else {
+                      return this.buildMapper(build, jobs, []);
+                    }
                   })
                   .then(() => {
                     this.persistCount++;
@@ -122,7 +133,7 @@ class CIIndexer {
                   });
               } else {
                 log(`Processing build with no jobs #${build.id} [${this.persistCount + this.omitCount}]`);
-                return this.buildMapper(build, []).then(() => {
+                return this.buildMapper(build, [], []).then(() => {
                   this.persistCount++;
                 });
               }
@@ -133,10 +144,43 @@ class CIIndexer {
               } else {
                 log(`Processing build #${build.id} [${this.persistCount + this.omitCount}]`);
                 build = build as GitlabPipeline;
-                return this.buildMapper(
-                  build,
-                  build.jobs.edges.map((edge) => edge.node),
-                );
+
+                const artifactPromises = build.jobs.edges.flatMap((jobEdge) => {
+                  return jobEdge.node.artifacts.nodes.map((artifact) => {
+                    if (artifact.name === 'jacoco.zip') {
+                      if ('project' in build && this.controller instanceof GitLab) {
+                        const projectIdNumber = build.project.id.slice(build.project.id.lastIndexOf('/') + 1);
+                        const jobID = jobEdge.node.id.slice(jobEdge.node.id.lastIndexOf('/') + 1);
+
+                        return this.controller.downloadJacocoArtifact(projectIdNumber, jobID).then((xmlContent) => {
+                          if (xmlContent === null) {
+                            log(`No Jacoco report found for job ${jobEdge.node.id}`);
+                            return artifact; // Return the artifact without xml content
+                          }
+                          return {
+                            ...artifact,
+                            created_at: jobEdge.node.finishedAt,
+                            xmlContent: xmlContent,
+                          }; // Return a promise with xml content for jacoco artifacts
+                        });
+                      } else {
+                        Promise.resolve(artifact); // Return a promise for other artifacts
+                      }
+                    } else {
+                      return Promise.resolve(artifact); // Return a promise for other artifacts
+                    }
+                  });
+                });
+
+                return Promise.all(artifactPromises).then((pipelineArtifacts) => {
+                  if ('jobs' in build) {
+                    return this.buildMapper(
+                      build,
+                      build.jobs.edges.map((edge) => edge.node),
+                      pipelineArtifacts,
+                    );
+                  }
+                });
               }
             }
           } else {

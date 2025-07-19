@@ -87,7 +87,7 @@ class GitHub {
       });
   }
 
-  getPipelineArtifacts(projectId: string, pipelineId: string) {
+  getPipelineArtifacts(projectId: string, pipelineId: number) {
     log('getPipelineArtifacts(%o, %o)', projectId, pipelineId);
     return this.github.rest.actions
       .listWorkflowRunArtifacts({
