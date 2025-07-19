@@ -74,13 +74,14 @@ function Chart(props: {
   }, [props.chartContainerRef, chartHeight, chartWidth, throttledResize]);
 
   useEffect(() => {
-    const chartData: TestEvolutionChartData[] = createBarCharData(commits, files, commitsFilesConnections);
-    //TODO: remove this block of code, just for testing purposes
-    for (let i = 0; i < 100; i++) {
-      chartData.push({ time: `2024-01-${i + 1}`, amountOfTestCommits: Math.floor(Math.random() * 100) });
-    }
+    const chartData: TestEvolutionChartData[] = createBarCharData(
+      commits,
+      files,
+      commitsFilesConnections,
+      props.parameters.parametersGeneral.excludeMergeCommits,
+    );
     setChartData(chartData);
-  }, [commits, files, commitsFilesConnections]);
+  }, [commits, files, commitsFilesConnections, props.parameters.parametersGeneral.excludeMergeCommits]);
 
   //Set Global state when parameters change. This will also conclude in a refresh of the data.
   useEffect(() => {
