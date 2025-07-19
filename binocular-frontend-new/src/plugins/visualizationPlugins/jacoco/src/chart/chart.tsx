@@ -47,10 +47,10 @@ function Chart(props: {
    * -----------------------------
    */
   // Redux Global State
-  const jacocoReportData = useSelector((state: RootState) => state.jacocoReportData);
-  const selectedReport = useSelector((state: RootState) => state.selectedReport);
-  const isLoading = useSelector((state: RootState) => state.isLoading);
-  const error = useSelector((state: RootState) => state.error);
+  const jacocoReportData = useSelector((state: RootState) => state.plugin.jacocoReportData);
+  const selectedReport = useSelector((state: RootState) => state.plugin.selectedReport);
+  const isLoading = useSelector((state: RootState) => state.plugin.isLoading);
+  const error = useSelector((state: RootState) => state.plugin.error);
 
   // React Component State
   const [chartWidth, setChartWidth] = useState(100);

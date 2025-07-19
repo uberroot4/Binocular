@@ -28,13 +28,15 @@ function* watchDateRangeChange(dataConnection: DataPlugin) {
 
 function* fetchChangesData(dataConnection: DataPlugin) {
   yield put(setDataState(DataState.FETCHING));
-  const state: TestCommitHistoryState = yield select();
-  const commits: DataPluginCommit[] = yield call(() => dataConnection.commits.getAll(state.dateRange.from, state.dateRange.to));
+  const state: { plugin: TestCommitHistoryState } = yield select();
+  const commits: DataPluginCommit[] = yield call(() =>
+    dataConnection.commits.getAll(state.plugin.dateRange.from, state.plugin.dateRange.to),
+  );
   yield put(setCommits(commits));
   const files: DataPluginFiles[] = yield call(() => dataConnection.files.getAll());
   yield put(setFiles(files));
   const commitsFilesConnections: DataPluginCommitsFilesConnection[] = yield call(() =>
-    dataConnection.commitsFilesConnections.getAll(state.dateRange.from, state.dateRange.to),
+    dataConnection.commitsFilesConnections.getAll(state.plugin.dateRange.from, state.plugin.dateRange.to),
   );
   yield put(setCommitsFilesConnections(commitsFilesConnections));
   yield put(setDataState(DataState.COMPLETE));

@@ -25,15 +25,17 @@ function* fetchSunburstChartData(dataConnection: DataPlugin) {
 
   try {
     // Get the current parameters (e.g., date range) from state if needed
-    const state: JacocoState = yield select();
+    const state: { plugin: JacocoState } = yield select();
 
     // Replace with actual data fetching logic from the data plugin
     const data: DataPluginJacocoReport[] = yield call(() =>
-      dataConnection.jacocoReports.getAll(state.dateRange.from, state.dateRange.to, 'DESC'),
+      dataConnection.jacocoReports.getAll(state.plugin.dateRange.from, state.plugin.dateRange.to, 'DESC'),
     );
     // Dispatch the data to the reducer
     if (data.length === 0) {
-      yield put(fetchSunburstDataFailure('No data available from: ' + state.dateRange.from + ' to: ' + state.dateRange.to + '.'));
+      yield put(
+        fetchSunburstDataFailure('No data available from: ' + state.plugin.dateRange.from + ' to: ' + state.plugin.dateRange.to + '.'),
+      );
     } else if (data.length === 2) {
       yield put(fetchSunburstDataSuccess(data));
     } else {

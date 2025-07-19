@@ -36,10 +36,10 @@ function Chart(props: {
    * -----------------------------
    */
   //Redux Global State
-  const commits = useSelector((state: RootState) => state.commits);
-  const files = useSelector((state: RootState) => state.files);
-  const commitsFilesConnections = useSelector((state: RootState) => state.commitsFilesConnections);
-  const dataState = useSelector((state: RootState) => state.dataState);
+  const commits = useSelector((state: RootState) => state.plugin.commits);
+  const files = useSelector((state: RootState) => state.plugin.files);
+  const commitsFilesConnections = useSelector((state: RootState) => state.plugin.commitsFilesConnections);
+  const dataState = useSelector((state: RootState) => state.plugin.dataState);
   //React Component State
   const [chartWidth, setChartWidth] = useState(100);
   const [chartHeight, setChartHeight] = useState(100);
@@ -75,7 +75,6 @@ function Chart(props: {
 
   useEffect(() => {
     const chartData: TestEvolutionChartData[] = createBarCharData(commits, files, commitsFilesConnections);
-    console.log(chartData);
     //TODO: remove this block of code, just for testing purposes
     for (let i = 0; i < 100; i++) {
       chartData.push({ time: `2024-01-${i + 1}`, amountOfTestCommits: Math.floor(Math.random() * 100) });
