@@ -11,7 +11,7 @@ import { DataState, setDateRange } from '../reducer';
 import { BarChart } from './barChart.tsx';
 import { createBarCharData } from '../utilities/dataConverter.ts';
 
-export interface TestEvolutionChartData {
+export interface TestCommitHistoryChartData {
   time: string;
   amountOfTestCommits: number;
 }
@@ -43,7 +43,7 @@ function Chart(props: {
   //React Component State
   const [chartWidth, setChartWidth] = useState(100);
   const [chartHeight, setChartHeight] = useState(100);
-  const [chartData, setChartData] = useState<TestEvolutionChartData[]>();
+  const [chartData, setChartData] = useState<TestCommitHistoryChartData[]>();
 
   /*
   Throttle the resize of the svg (refresh rate) to every 1s to not overwhelm the renderer,
@@ -73,8 +73,9 @@ function Chart(props: {
     return () => resizeObserver.disconnect();
   }, [props.chartContainerRef, chartHeight, chartWidth, throttledResize]);
 
+  // Set chartData when commits, files, or connection change
   useEffect(() => {
-    const chartData: TestEvolutionChartData[] = createBarCharData(
+    const chartData: TestCommitHistoryChartData[] = createBarCharData(
       commits,
       files,
       commitsFilesConnections,
@@ -96,19 +97,17 @@ function Chart(props: {
   }, [dispatch, props.dataConnection]);
 
   return (
-    <>
-      <div className={'w-full h-full flex justify-center items-center'} ref={props.chartContainerRef}>
-        {dataState === DataState.EMPTY && <div>NoData</div>}
-        {dataState === DataState.FETCHING && (
-          <div>
-            <span className="loading loading-spinner loading-lg text-accent"></span>
-          </div>
-        )}
-        {dataState === DataState.COMPLETE && (
-          <BarChart data={chartData} width={chartWidth} height={chartHeight} dateRange={props.parameters.parametersDateRange} />
-        )}
-      </div>
-    </>
+    <div className={'w-full h-full flex justify-center items-center'} ref={props.chartContainerRef}>
+      {dataState === DataState.EMPTY && <div>No data available</div>}
+      {dataState === DataState.FETCHING && (
+        <div>
+          <span className="loading loading-spinner loading-lg text-accent"></span>
+        </div>
+      )}
+      {dataState === DataState.COMPLETE && (
+        <BarChart data={chartData} width={chartWidth} height={chartHeight} dateRange={props.parameters.parametersDateRange} />
+      )}
+    </div>
   );
 }
 

@@ -1,14 +1,14 @@
 import { DataPluginCommit } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommits.ts';
 import { DataPluginFile } from '../../../../interfaces/dataPluginInterfaces/dataPluginFiles.ts';
 import { DataPluginCommitsFilesConnection } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommitsFilesConnections.ts';
-import { TestEvolutionChartData } from '../chart/chart.tsx';
+import { TestCommitHistoryChartData } from '../chart/chart.tsx';
 
 export function createBarCharData(
   commits: DataPluginCommit[],
   files: DataPluginFile[],
   commitsFilesConnections: DataPluginCommitsFilesConnection[],
   excludeMergeCommits: boolean,
-): TestEvolutionChartData[] {
+): TestCommitHistoryChartData[] {
   const testFiles: DataPluginFile[] = files.filter(
     (file: DataPluginFile) => file.path.includes('src/test/') && !file.path.includes('src/test/resources/'),
   );
