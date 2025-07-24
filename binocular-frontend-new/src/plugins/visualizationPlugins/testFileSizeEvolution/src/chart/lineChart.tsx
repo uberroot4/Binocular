@@ -19,7 +19,7 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
   const boundsWidth = width - MARGIN.right - MARGIN.left;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  // States for handling brushing and current scale
+  // States for handling brushing
   const [isBrushing, setIsBrushing] = useState(false);
   const [brushStart, setBrushStart] = useState<number | null>(null);
   const [brushEnd, setBrushEnd] = useState<number | null>(null);
