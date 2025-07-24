@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import * as d3 from 'd3';
 import { XAxis } from './XAxis';
 import { YAxis } from './YAxis.tsx';
-import { TestEvolutionChartData } from './chart.tsx';
+import { TestCommitHistoryChartData } from './chart.tsx';
 
 const MARGIN = { top: 30, right: 30, bottom: 40, left: 40 };
 
@@ -10,7 +10,7 @@ type LineChartProps = {
   width: number;
   height: number;
   dateRange: { from: string; to: string };
-  data: TestEvolutionChartData[] | undefined;
+  data: TestCommitHistoryChartData[] | undefined;
 };
 
 export const BarChart = ({ width, height, dateRange, data }: LineChartProps) => {
@@ -22,29 +22,29 @@ export const BarChart = ({ width, height, dateRange, data }: LineChartProps) => 
   const [brushStart, setBrushStart] = useState<number | null>(null);
   const [brushEnd, setBrushEnd] = useState<number | null>(null);
 
-  // X scale
+  // Initialize the time range for the x-axis
   const times: [Date, Date] = [new Date(dateRange.from), new Date(dateRange.to)];
   const [domain, setDomain] = useState<[Date | undefined, Date | undefined]>(times);
-  const defaultStart = new Date();
-  const defaultEnd = new Date();
-
-  const xScale = d3
-    .scaleTime()
-    .domain([domain[0] ?? defaultStart, domain[1] ?? defaultEnd])
-    .range([0, boundsWidth]);
 
   // If no data is provided, early return
   if (!data) {
     return <div>No data available</div>;
   }
 
+  // X scale
+  const xScale = d3
+    .scaleTime()
+    .domain([domain[0] ?? new Date(), domain[1] ?? new Date()])
+    .range([0, boundsWidth]);
+
   // Y scale
   const maxY = d3.max(data, (d) => d.amountOfTestCommits) ?? 0;
-  const yTicks = d3.range(0, Math.ceil(maxY) + 1);
   const yScale = d3
     .scaleLinear()
     .domain([0, Math.ceil(maxY || 0)])
     .range([boundsHeight, 0]);
+  // Get y ticks for the drawing of horizontal grid lines
+  const yTicks: number[] = yScale.ticks();
 
   // Mouse handlers for custom brushing
   const handleMouseDown = (event: React.MouseEvent<SVGRectElement>) => {
@@ -91,10 +91,10 @@ export const BarChart = ({ width, height, dateRange, data }: LineChartProps) => 
               </>
             );
           })}
-          {/* Horizontal grid lines on full integers */}
+          {/* Horizontal grid lines */}
           {yTicks.map((tick, i) => {
             const y = yScale(tick);
-            return <>{i % 10 == 0 ? <line key={i} x1={0} x2={boundsWidth} y1={y} y2={y} stroke="#ccc" strokeDasharray="3,3" /> : null}</>;
+            return <>{<line key={i} x1={0} x2={boundsWidth} y1={y} y2={y} stroke="#ccc" strokeDasharray="3,3" />}</>;
           })}
         </g>
         <g transform={`translate(${[MARGIN.left, boundsHeight + MARGIN.top].join(',')})`}>
