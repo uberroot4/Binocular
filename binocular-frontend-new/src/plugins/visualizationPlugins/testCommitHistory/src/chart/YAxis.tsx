@@ -6,15 +6,15 @@ type YAxisProps = {
 };
 
 export const YAxis = ({ yScale }: YAxisProps) => {
-  const axisRef = useRef<SVGGElement | null>(null);
+  const yAxisRef = useRef<SVGGElement | null>(null);
 
   // Render the Y axis using d3.js, not react
   useEffect(() => {
     const axisGenerator = d3.axisLeft(yScale);
-    if (axisRef.current) {
-      d3.select<SVGGElement, unknown>(axisRef.current).call(axisGenerator);
+    if (yAxisRef.current) {
+      d3.select<SVGGElement, unknown>(yAxisRef.current).call(axisGenerator);
     }
   }, [yScale]);
 
-  return <g ref={axisRef} />;
+  return <g ref={yAxisRef} />;
 };
