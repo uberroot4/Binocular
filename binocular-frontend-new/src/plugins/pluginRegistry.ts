@@ -4,6 +4,7 @@ import ExampleStats from './visualizationPlugins/exampleStats';
 import ExampleComplex from './visualizationPlugins/exampleComplex';
 import Jacoco from './visualizationPlugins/jacoco';
 import TestCommitHistory from './visualizationPlugins/testCommitHistory';
+import TestFileSizeEvolution from './visualizationPlugins/testFileSizeEvolution';
 
 import MockData from './dataPlugins/mockData';
 import BinocularBackend from './dataPlugins/binocularBackend';
@@ -34,6 +35,7 @@ export const visualizationPlugins: VisualizationPlugin<any, any>[] = [
   ExampleComplex,
   Jacoco,
   TestCommitHistory,
+  TestFileSizeEvolution,
   FileChanges,
 ];
 
