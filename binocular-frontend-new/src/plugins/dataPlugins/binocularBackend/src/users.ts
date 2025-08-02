@@ -22,6 +22,7 @@ export default class Users implements DataPluginUsers {
                 page
                 perPage
                 data {
+                  _id
                   id
                   gitSignature
                 }

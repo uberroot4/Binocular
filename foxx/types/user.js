@@ -12,6 +12,10 @@ module.exports = new gql.GraphQLObjectType({
   description: 'A project user (developer, issue-reporter, etc...)',
   fields() {
     return {
+      _id: {
+        type: new gql.GraphQLNonNull(gql.GraphQLString),
+        description: 'Id',
+      },
       id: {
         type: new gql.GraphQLNonNull(gql.GraphQLString),
         resolve: (e) => e._key,

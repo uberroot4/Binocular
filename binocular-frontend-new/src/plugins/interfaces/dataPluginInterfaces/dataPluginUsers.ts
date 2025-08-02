@@ -3,6 +3,7 @@ export interface DataPluginUsers {
 }
 
 export interface DataPluginUser {
+  _id: string;
   id: string;
   gitSignature: string;
 }
