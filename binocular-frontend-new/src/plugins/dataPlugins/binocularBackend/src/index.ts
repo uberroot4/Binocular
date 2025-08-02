@@ -9,6 +9,7 @@ import { FileConfig } from '../../../interfaces/dataPluginInterfaces/dataPluginF
 import { ProgressUpdateConfig } from '../../../../types/settings/databaseSettingsType.ts';
 import Builds from './builds.ts';
 import Branches from './branches.ts';
+import CommitsUsersConnections from './commitsUsersConnections.ts';
 
 class BinocularBackend implements DataPlugin {
   public name = 'Binocular Backend';
@@ -29,6 +30,7 @@ class BinocularBackend implements DataPlugin {
   public branches;
   public jacocoReports;
   public commitsFilesConnections;
+  public commitsUsersConnections;
 
   constructor() {
     this.commits = new Commits('/graphQl');
@@ -38,6 +40,7 @@ class BinocularBackend implements DataPlugin {
     this.files = new Files('/graphQl');
     this.jacocoReports = new JacocoReports('/graphQl');
     this.commitsFilesConnections = new CommitsFilesConnections('/graphQl');
+    this.commitsUsersConnections = new CommitsUsersConnections('/graphQl');
     this.branches = new Branches('/graphQl');
   }
 
@@ -59,6 +62,7 @@ class BinocularBackend implements DataPlugin {
     this.files = new Files(endpoint);
     this.jacocoReports = new JacocoReports(endpoint);
     this.commitsFilesConnections = new CommitsFilesConnections(endpoint);
+    this.commitsUsersConnections = new CommitsUsersConnections(endpoint);
   }
 
   public async clearRemains() {}
