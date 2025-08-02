@@ -3,6 +3,7 @@ export interface DataPluginCommitsFilesConnections {
 }
 
 export interface DataPluginCommitsFilesConnection {
+  _id: string;
   _from: string;
   _to: string;
   lineCount: number;

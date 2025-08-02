@@ -24,6 +24,7 @@ export default class CommitsFilesConnections implements DataPluginCommitsFilesCo
               page
               perPage
               data {
+                _id
                 _from
                 _to
                 lineCount

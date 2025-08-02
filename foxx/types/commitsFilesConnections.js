@@ -7,6 +7,10 @@ module.exports = new gql.GraphQLObjectType({
   description: 'Connection between commits and files',
   fields() {
     return {
+      _id: {
+        type: new gql.GraphQLNonNull(gql.GraphQLString),
+        description: 'Id',
+      },
       _from: {
         type: new gql.GraphQLNonNull(gql.GraphQLString),
         description: 'From commit',
