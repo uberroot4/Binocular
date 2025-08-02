@@ -7,6 +7,7 @@ import { DataPluginBuilds } from './dataPluginInterfaces/dataPluginBuilds.ts';
 import { DataPluginFiles, FileConfig } from './dataPluginInterfaces/dataPluginFiles.ts';
 import { ProgressUpdateConfig } from '../../types/settings/databaseSettingsType.ts';
 import { DataPluginBranches } from './dataPluginInterfaces/dataPluginBranches.ts';
+import { DataPluginCommitsUsersConnections } from './dataPluginInterfaces/dataPluginCommitsUsersConnections.ts';
 
 export interface DataPlugin {
   name: string;
@@ -29,4 +30,5 @@ export interface DataPlugin {
   ) => Promise<void>;
   clearRemains: () => Promise<void>;
   commitsFilesConnections: DataPluginCommitsFilesConnections;
+  commitsUsersConnections: DataPluginCommitsUsersConnections;
 }
