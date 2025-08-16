@@ -14,7 +14,6 @@ import reactor.core.publisher.Mono
 @Service
 class GitHubService (private val webClient: WebClient, private val configLoader: BinocularRcLoader) {
 
-    // this is still chaos
     fun loadAllAssignableUsers(owner: String, repo: String): Mono<List<GitHubUser>> {
         val allUsers = mutableListOf<GitHubUser>()
 
