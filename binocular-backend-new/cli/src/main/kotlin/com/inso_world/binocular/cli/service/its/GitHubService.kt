@@ -1,6 +1,6 @@
 package com.inso_world.binocular.cli.service.its
 
-import com.inso_world.binocular.cli.config.loadGitHubToken
+import com.inso_world.binocular.cli.config.BinocularRcLoader
 import com.inso_world.binocular.cli.index.its.GitHubUser
 import com.inso_world.binocular.cli.index.its.GraphQlUserResponse
 import com.inso_world.binocular.cli.index.its.PageInfo
@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono
  * Service for accessing GitHub API (GraphQl).
  */
 @Service
-class GitHubService (private val webClient: WebClient){
+class GitHubService (private val webClient: WebClient, private val configLoader: BinocularRcLoader) {
 
     // this is still chaos
     fun loadAllAssignableUsers(owner: String, repo: String): Mono<List<GitHubUser>> {
@@ -45,7 +45,7 @@ class GitHubService (private val webClient: WebClient){
 
             return webClient.post()
                 .uri("https://api.github.com/graphql")
-                .header("Authorization", "Bearer ${loadGitHubToken()}")
+                .header("Authorization", "Bearer ${configLoader.loadGitHubToken()}")
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(GraphQlUserResponse::class.java)
