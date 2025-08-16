@@ -25,6 +25,31 @@ open class Index(
         BinocularFfi().hello()
     }
 
+    @Command(command = ["issues"], description = "Index issues from ITS")
+    open fun issues(
+        @Option(
+            longNames = ["repo_owner"],
+            shortNames = ['o'],
+            required = true,
+            description = "Owner of the repository on GitHub."
+        ) repoOwner: String?,
+        @Option(
+            longNames = ["repo_name"],
+            shortNames = ['r'],
+            required = true,
+            description = "Name of the repository on GitHub."
+        ) repoName: String,
+        @Option(
+            longNames = ["project_name"],
+            shortNames = ['n'],
+            required = true,
+            description = "Custom name of the project.",
+        ) projectName: String,
+    ) {
+        println("Not implemented yet")
+        TODO()
+    }
+
     @Command(command = ["commits"])
     open fun commits(
         @Option(longNames = ["repo_path"], required = false) repoPath: String?,
