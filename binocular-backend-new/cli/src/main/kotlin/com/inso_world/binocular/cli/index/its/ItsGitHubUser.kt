@@ -1,6 +1,6 @@
 package com.inso_world.binocular.cli.index.its
 
-data class GitHubUser(
+data class ItsGitHubUser(
     val login: String,
     //val email: String?,
     val name: String?,

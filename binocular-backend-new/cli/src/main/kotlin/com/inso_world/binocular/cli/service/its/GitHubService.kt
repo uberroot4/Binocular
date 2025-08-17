@@ -2,7 +2,7 @@ package com.inso_world.binocular.cli.service.its
 
 import com.inso_world.binocular.cli.config.BinocularRcLoader
 import com.inso_world.binocular.cli.exception.ServiceException
-import com.inso_world.binocular.cli.index.its.GitHubUser
+import com.inso_world.binocular.cli.index.its.ItsGitHubUser
 import com.inso_world.binocular.cli.index.its.GraphQlUserResponse
 import com.inso_world.binocular.cli.index.its.PageInfo
 import org.slf4j.Logger
@@ -19,11 +19,11 @@ class GitHubService (private val webClient: WebClient, private val configLoader:
 
     private var logger: Logger = LoggerFactory.getLogger(GitHubService::class.java)
 
-    fun loadAllAssignableUsers(owner: String, repo: String): Mono<List<GitHubUser>> {
+    fun loadAllAssignableUsers(owner: String, repo: String): Mono<List<ItsGitHubUser>> {
         logger.trace("Load all assignable users from GitHub for $owner $repo")
-        val allUsers = mutableListOf<GitHubUser>()
+        val allUsers = mutableListOf<ItsGitHubUser>()
 
-        fun fetchPage(cursor: String?): Mono<Pair<List<GitHubUser>, PageInfo>> {
+        fun fetchPage(cursor: String?): Mono<Pair<List<ItsGitHubUser>, PageInfo>> {
             val query = """
             query(${"$"}cursor: String) {
               repository(owner: "$owner", name: "$repo") {
@@ -68,7 +68,7 @@ class GitHubService (private val webClient: WebClient, private val configLoader:
                 }
         }
 
-        fun fetchAllPages(cursor: String? = null): Mono<List<GitHubUser>> {
+        fun fetchAllPages(cursor: String? = null): Mono<List<ItsGitHubUser>> {
             return fetchPage(cursor).flatMap { (users, pageInfo) ->
                 allUsers.addAll(users)
                 if (pageInfo.hasNextPage) {
