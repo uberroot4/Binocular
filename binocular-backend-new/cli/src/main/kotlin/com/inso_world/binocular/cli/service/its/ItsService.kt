@@ -1,16 +1,32 @@
 package com.inso_world.binocular.cli.service.its
 
+import com.inso_world.binocular.cli.index.its.ItsGitHubUser
 import com.inso_world.binocular.cli.service.VcsService
+import com.inso_world.binocular.model.Account
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Mono
 
 /**
  * Service for indexing ITS data.
  */
 @Service
-class ItsService {
+class ItsService (
+    private val gitHubService: GitHubService,
+    private val accountService: AccountService
+) {
     private var logger: Logger = LoggerFactory.getLogger(VcsService::class.java)
 
-    //TODO
+    fun indexAccountsFromGitHub(owner: String, repo: String): Mono<List<Account>> {
+        logger.info("Indexing accounts from GitHub for $owner/$repo")
+
+        return gitHubService.loadAllAssignableUsers(owner, repo)
+            .map { users ->
+                users.map { it.toDomain() }
+            }.flatMap { accounts ->
+                logger.debug("Saving ${accounts.size} accounts")
+                accountService.saveAll(accounts)
+            }
+    }
 }

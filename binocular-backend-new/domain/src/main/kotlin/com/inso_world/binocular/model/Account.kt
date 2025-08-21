@@ -6,8 +6,8 @@ package com.inso_world.binocular.model
  */
 data class Account(
     var id: String? = null,
-    var platform: Platform? = null,
-    var login: String? = null,
+    val platform: Platform,
+    val login: String,
     var name: String? = null,
     var avatarUrl: String? = null,
     var url: String? = null,
