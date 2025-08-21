@@ -2,6 +2,7 @@ package com.inso_world.binocular.cli.commands
 
 import com.inso_world.binocular.cli.service.ProjectService
 import com.inso_world.binocular.cli.service.VcsService
+import com.inso_world.binocular.cli.service.its.ItsService
 import com.inso_world.binocular.ffi.BinocularFfi
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,6 +18,7 @@ import org.springframework.shell.command.annotation.Option
 open class Index(
     @Autowired private val vcsService: VcsService,
     @Autowired private val projectService: ProjectService,
+    @Autowired private val itsService: ItsService,
 ) {
     private var logger: Logger = LoggerFactory.getLogger(Index::class.java)
 
@@ -25,14 +27,14 @@ open class Index(
         BinocularFfi().hello()
     }
 
-    @Command(command = ["issues"], description = "Index issues from ITS")
+    @Command(command = ["accounts"], description = "Index accounts from ITS")
     open fun issues(
         @Option(
             longNames = ["repo_owner"],
             shortNames = ['o'],
             required = true,
             description = "Owner of the repository on GitHub."
-        ) repoOwner: String?,
+        ) repoOwner: String,
         @Option(
             longNames = ["repo_name"],
             shortNames = ['r'],
@@ -46,8 +48,11 @@ open class Index(
             description = "Custom name of the project.",
         ) projectName: String,
     ) {
-        println("Not implemented yet")
-        TODO()
+        logger.trace(">>> index(owner: $repoOwner, name: $repoName)")
+        logger.debug("Project '$projectName'")
+        val project = this.projectService.getOrCreateProject(projectName)
+        itsService.indexAccountsFromGitHub(repoOwner, repoName).subscribe()
+        logger.trace("<<< index(owner: $repoOwner, name: $repoName)")
     }
 
     @Command(command = ["commits"])
