@@ -2,6 +2,7 @@ package com.inso_world.binocular.infrastructure.sql.mapper
 
  import com.inso_world.binocular.core.persistence.mapper.EntityMapper
  import com.inso_world.binocular.core.persistence.proxy.RelationshipProxyFactory
+ import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingContext
  import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEntity
  import com.inso_world.binocular.model.Account
  import org.slf4j.Logger
@@ -19,12 +20,18 @@ package com.inso_world.binocular.infrastructure.sql.mapper
 //        @Lazy private val mergeRequestMapper: MergeRequestMapper,
 //        @Lazy private val noteMapper: NoteMapper,
     ) : EntityMapper<Account, AccountEntity> {
+
+//        @Autowired
+//        private lateinit var ctx: MappingContext
+
         val logger: Logger = LoggerFactory.getLogger(AccountMapper::class.java)
+
         /**
          * Converts a domain Account to a SQL AccountEntity
          */
         override fun toEntity(domain: Account): AccountEntity {
             logger.trace("Account toEntity(${domain.login})")
+
             return AccountEntity(
                 id = domain.id?.toLong(),
                 platform = domain.platform,
@@ -55,6 +62,9 @@ package com.inso_world.binocular.infrastructure.sql.mapper
                 name = entity.name,
                 avatarUrl = entity.avatarUrl,
                 url = entity.url,
+
+                //TODO relationships (maybe needs mapping context)
+
                 // Use direct entity relationships and map them to domain objects using the new createLazyMappedList method
 //                issues =
 //                    proxyFactory.createLazyMappedList(
