@@ -51,6 +51,7 @@ open class Index(
         logger.trace(">>> index(owner: $repoOwner, name: $repoName)")
         logger.debug("Project '$projectName'")
         val project = this.projectService.getOrCreateProject(projectName)
+        // TODO index accounts into the right project
         itsService.indexAccountsFromGitHub(repoOwner, repoName).block()
         logger.trace("<<< index(owner: $repoOwner, name: $repoName)")
     }

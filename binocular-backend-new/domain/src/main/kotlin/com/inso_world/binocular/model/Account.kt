@@ -1,5 +1,6 @@
 package com.inso_world.binocular.model
 
+import jakarta.validation.constraints.NotBlank
 import java.util.Objects
 
 /**
@@ -8,7 +9,9 @@ import java.util.Objects
  */
 data class Account(
     var id: String? = null,
+    @field:NotBlank
     val platform: Platform,
+    @field:NotBlank
     val login: String,
     var name: String? = null,
     var avatarUrl: String? = null,
