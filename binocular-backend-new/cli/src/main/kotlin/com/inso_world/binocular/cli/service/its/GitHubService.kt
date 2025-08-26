@@ -29,6 +29,7 @@ class GitHubService (private val webClient: WebClient, private val configLoader:
               repository(owner: "$owner", name: "$repo") {
                 assignableUsers(first: 100, after: ${"$"}cursor) {
                   nodes {
+                    id
                     login
                     name
                     url

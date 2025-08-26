@@ -2,7 +2,6 @@ package com.inso_world.binocular.infrastructure.sql.mapper
 
  import com.inso_world.binocular.core.persistence.mapper.EntityMapper
  import com.inso_world.binocular.core.persistence.proxy.RelationshipProxyFactory
- import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingContext
  import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEntity
  import com.inso_world.binocular.model.Account
  import org.slf4j.Logger
@@ -34,6 +33,7 @@ package com.inso_world.binocular.infrastructure.sql.mapper
 
             return AccountEntity(
                 id = domain.id?.toLong(),
+                gid = domain.gid,
                 platform = domain.platform,
                 login = domain.login,
                 name = domain.name,
@@ -57,6 +57,7 @@ package com.inso_world.binocular.infrastructure.sql.mapper
 
             return Account(
                 id = id.toString(),
+                gid = entity.gid,
                 platform = entity.platform,
                 login = entity.login,
                 name = entity.name,

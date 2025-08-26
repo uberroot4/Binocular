@@ -3,7 +3,6 @@ package com.inso_world.binocular.infrastructure.sql.integration.persistence.mapp
 import com.inso_world.binocular.infrastructure.sql.integration.persistence.mapper.base.BaseMapperTest
 import com.inso_world.binocular.infrastructure.sql.mapper.AccountMapper
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEntity
-import com.inso_world.binocular.infrastructure.sql.persistence.entity.ProjectEntity
 import com.inso_world.binocular.model.Platform
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.Nested
@@ -21,6 +20,7 @@ internal class AccountMapperTest : BaseMapperTest() {
         fun `should map account entity to domain`() {
             val accountEntity = AccountEntity(
                 id = 1L,
+                gid = "MDQ9JXMlcjY5MoB7Nah4",
                 name = "test",
                 login = "test",
                 url = "https://github.com/test",
@@ -45,6 +45,7 @@ internal class AccountMapperTest : BaseMapperTest() {
             val accountEntities = listOf(
                 AccountEntity(
                     id = 1L,
+                    gid = "MDQ9JXMlcjY5MoB7Nah4",
                     name = "Alice",
                     login = "alice123",
                     url = "https://github.com/alice123",
@@ -53,6 +54,7 @@ internal class AccountMapperTest : BaseMapperTest() {
                 ),
                 AccountEntity(
                     id = 2L,
+                    gid ="MDQ9JXMlcjiZ9MoB7Nah4",
                     name = "Bob",
                     login = "bob456",
                     url = "https://github.com/bob456",
@@ -84,6 +86,7 @@ internal class AccountMapperTest : BaseMapperTest() {
         fun `should map domain account to entity`() {
             val domainAccount = com.inso_world.binocular.model.Account(
                 id = "1",
+                gid = "MDQ9JXMlcjY5MoB7Nah4",
                 name = "Alice",
                 login = "alice123",
                 url = "https://github.com/alice123",

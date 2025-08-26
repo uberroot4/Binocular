@@ -1,6 +1,7 @@
 package com.inso_world.binocular.model
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import java.util.Objects
 
 /**
@@ -10,6 +11,8 @@ import java.util.Objects
 data class Account(
     var id: String? = null,
     @field:NotBlank
+    val gid: String,
+    @field:NotNull
     val platform: Platform,
     @field:NotBlank
     val login: String,
@@ -22,7 +25,7 @@ data class Account(
     var notes: List<Note> = emptyList(),
 ) {
     fun uniqueKey(): String {
-        return "${this.platform}:${this.login}"
+        return "${this.platform}:${this.gid}"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -32,12 +35,12 @@ data class Account(
         other as Account
         if (id != other.id) return false
         if (platform != other.platform) return false
-        if (login != other.login) return false
+        if (gid != other.gid) return false
 
         return true
     }
 
-    override fun hashCode(): Int = Objects.hashCode("${this.platform}:${this.login}")
+    override fun hashCode(): Int = Objects.hashCode("${this.platform}:${this.gid}")
 }
 
 enum class Platform {

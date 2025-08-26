@@ -20,6 +20,7 @@
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     var id: Long? = null,
+    val gid: String,
     @Enumerated(EnumType.STRING)
     val platform: Platform,
     val login: String,
@@ -51,7 +52,7 @@
      ) : AbstractEntity() {
 
      override fun uniqueKey(): String {
-         return "${this.platform}:${this.login}"
+         return "${this.platform}:${this.gid}"
      }
 
      override fun equals(other: Any?): Boolean {
@@ -60,6 +61,6 @@
          return this.uniqueKey() == other.uniqueKey()
      }
 
-     override fun hashCode(): Int = Objects.hashCode("${this.platform}:${this.login}")
+     override fun hashCode(): Int = Objects.hashCode("${this.platform}:${this.gid}")
 
  }

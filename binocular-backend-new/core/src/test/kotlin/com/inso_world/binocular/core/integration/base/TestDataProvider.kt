@@ -25,6 +25,7 @@ object TestDataProvider {
         listOf(
             Account(
                 "1",
+                "MDQ9JXMlcjY5MoB7Nah4",
                 Platform.GitHub,
                 "user1",
                 "User One",
@@ -33,6 +34,7 @@ object TestDataProvider {
             ),
             Account(
                 "2",
+                "MDQ9JXjIMjY5MoB7Nah4",
                 Platform.GitLab,
                 "user2",
                 "User Two",
