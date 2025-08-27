@@ -79,6 +79,16 @@ internal data class CommitEntity(
     )
     var branches: MutableSet<BranchEntity> = mutableSetOf(),
 
+    // Files changed in this commit
+    @BatchSize(size = 256)
+    @ManyToMany
+    @JoinTable(
+        name = "commit_file_connections",
+        joinColumns = [JoinColumn(name = "commit_id")],
+        inverseJoinColumns = [JoinColumn(name = "file_id")],
+    )
+    var files: MutableSet<FileEntity> = mutableSetOf(),
+
     // Bidirectional many-to-many with BuildEntity: each commit can be associated with multiple builds
     @BatchSize(size = 256)
     @ManyToMany
@@ -88,6 +98,21 @@ internal data class CommitEntity(
         inverseJoinColumns = [JoinColumn(name = "build_id")],
     )
     var builds: MutableSet<BuildEntity> = mutableSetOf(),
+
+    // Modules associated with this commit
+    @BatchSize(size = 256)
+    @ManyToMany
+    @JoinTable(
+        name = "commit_module_connections",
+        joinColumns = [JoinColumn(name = "commit_id")],
+        inverseJoinColumns = [JoinColumn(name = "module_id")],
+    )
+    var modules: MutableSet<ModuleEntity> = mutableSetOf(),
+
+    // Issues linked to this commit (inverse side)
+    @BatchSize(size = 256)
+    @ManyToMany(mappedBy = "commits")
+    var issues: MutableSet<IssueEntity> = mutableSetOf(),
 
 //    @ManyToOne(fetch = FetchType.LAZY, optional = true, cascade = [CascadeType.PERSIST])
 //    var author: UserEntity? = null,

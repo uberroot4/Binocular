@@ -8,6 +8,7 @@ import com.inso_world.binocular.model.User
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 
 @Component
@@ -21,6 +22,7 @@ internal class UserMapper {
     private lateinit var commitMapper: CommitMapper
 
     @Autowired
+    @Lazy
     private lateinit var issueMapper: IssueMapper
 
     /**

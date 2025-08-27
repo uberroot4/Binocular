@@ -39,6 +39,10 @@ internal data class BranchEntity(
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "repository_id", nullable = false, updatable = false)
     var repository: RepositoryEntity? = null,
+
+    // Inverse side of branch-file mapping
+    @ManyToMany(mappedBy = "branches", fetch = FetchType.LAZY)
+    var files: MutableList<FileEntity> = mutableListOf(),
 ) : AbstractEntity() {
     @PreRemove
     fun preRemove() {
