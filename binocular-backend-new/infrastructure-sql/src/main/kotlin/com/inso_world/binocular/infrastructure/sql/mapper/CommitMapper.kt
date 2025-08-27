@@ -1,6 +1,5 @@
 package com.inso_world.binocular.infrastructure.sql.mapper
 
-import com.inso_world.binocular.core.persistence.proxy.RelationshipProxyFactory
 import com.inso_world.binocular.infrastructure.sql.exception.IllegalMappingStateException
 import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingContext
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.CommitEntity
@@ -28,19 +27,11 @@ internal class CommitMapper {
 
     @Autowired
     @Lazy
-    private lateinit var proxyFactory: RelationshipProxyFactory
-
-    @Autowired
-    @Lazy
     private lateinit var branchMapper: BranchMapper
 
-    /**
-     * Converts a domain Commit to a SQL CommitEntity
-     */
     fun toEntity(root: Commit): CommitEntity {
         toEntityGraph(sequenceOf(root))
 
-        // return the root node
         return ctx.entity.commit[root.sha]
             ?: throw IllegalMappingStateException("Root was not mapped")
     }
@@ -86,7 +77,6 @@ internal class CommitMapper {
     fun toDomain(root: CommitEntity): Commit {
         toDomainGraph(sequenceOf(root))
 
-        // return the root node
         return ctx.domain.commit[root.sha]
             ?: throw IllegalMappingStateException("Root was not mapped")
     }
@@ -94,14 +84,10 @@ internal class CommitMapper {
     fun toEntityGraph(
         @NotEmpty domains: Sequence<Commit>,
     ): MutableSet<CommitEntity> {
-        // --- PHASE 1: discover & create all CommitEntity instances ---
-
         val domainBySha = domains.associateBy { it.sha }.toMutableMap()
-        // we'll do a simple BFS (or DFS) from the root Commit
         val queue = ArrayDeque<Commit>()
         queue.addAll(domains)
 
-        // 2) instantiate *all* domain nodes, register in identity map
         while (queue.isNotEmpty()) {
             val dom = queue.removeFirst()
             domainBySha.computeIfAbsent(dom.sha) { dom }
@@ -111,16 +97,12 @@ internal class CommitMapper {
             }
             val ent = dom.toEntity()
 
-            // 1b) register it in our identity–map
             ctx.entity.commit[sha] = ent
 
-            // 1c) schedule its neighbours
             queue += dom.parents
             queue += dom.children
         }
-        // now every CommitEntity is sitting in ctx.entity.commit
 
-        // 2) wire up parent/child links in one sweep
         for ((sha, dom) in domainBySha) {
             val ent = ctx.entity.commit[sha]!!
             dom.parents.map { parentDom ->
@@ -148,14 +130,11 @@ internal class CommitMapper {
     fun toDomainGraph(
         @NotEmpty entities: Sequence<CommitEntity>,
     ): Set<Commit> {
-        // 1) build a sha→entity map (we assume entities already contains *all* commits)
         val entityBySha = entities.associateBy { it.sha }
 
-        // we'll do a simple BFS (or DFS) from the root Commit
         val queue = ArrayDeque<CommitEntity>()
         queue.addAll(entityBySha.values)
 
-        // 2) instantiate *all* domain nodes, register in identity map
         while (queue.isNotEmpty()) {
             val ent = queue.removeFirst()
             val sha = ent.sha
@@ -188,7 +167,6 @@ internal class CommitMapper {
                 }
         }
 
-        // 3) wire up parent/child links in one sweep
         for ((sha, ent) in entityBySha) {
             val dom =
                 ctx.domain.commit[sha]

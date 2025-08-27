@@ -1,81 +1,77 @@
-// package com.inso_world.binocular.infrastructure.sql.persistence.mapper
-//
-// import com.inso_world.binocular.core.persistence.mapper.EntityMapper
-// import com.inso_world.binocular.core.persistence.proxy.RelationshipProxyFactory
-// import com.inso_world.binocular.infrastructure.sql.persistence.entity.MilestoneEntity
-// import com.inso_world.binocular.model.Milestone
-// import org.springframework.beans.factory.annotation.Autowired
-// import org.springframework.context.annotation.Lazy
-// import org.springframework.context.annotation.Profile
-// import org.springframework.stereotype.Component
-// import org.springframework.transaction.annotation.Transactional
-//
-// @Component
-// class MilestoneMapper
-//    @Autowired
-//    constructor(
-//        private val proxyFactory: RelationshipProxyFactory,
-//        @Lazy private val issueMapper: IssueMapper,
-//        @Lazy private val mergeRequestMapper: MergeRequestMapper,
-//    ) : EntityMapper<Milestone, MilestoneEntity> {
-//        /**
-//         * Converts a domain Milestone to a SQL MilestoneEntity
-//         */
-//        override fun toEntity(domain: Milestone): MilestoneEntity =
-//            MilestoneEntity(
-//                id = domain.id,
-//                iid = domain.iid,
-//                title = domain.title,
-//                description = domain.description,
-//                createdAt = domain.createdAt,
-//                updatedAt = domain.updatedAt,
-//                startDate = domain.startDate,
-//                dueDate = domain.dueDate,
-//                state = domain.state,
-//                expired = domain.expired,
-//                webUrl = domain.webUrl,
-//                // Note: Relationships are not directly mapped in SQL entity
-//            )
-//
-//        /**
-//         * Converts a SQL MilestoneEntity to a domain Milestone
-//         *
-//         * Uses lazy loading proxies for relationships, which will only be loaded
-//         * when accessed. This provides a consistent API regardless of the database
-//         * implementation and avoids the N+1 query problem.
-//         */
-//        @Transactional(readOnly = true)
-//        override fun toDomain(entity: MilestoneEntity): Milestone {
-//            val id = entity.id ?: throw IllegalStateException("Entity ID cannot be null")
-//
-//            return Milestone(
-//                id = id,
-//                iid = entity.iid,
-//                title = entity.title,
-//                description = entity.description,
-//                createdAt = entity.createdAt,
-//                updatedAt = entity.updatedAt,
-//                startDate = entity.startDate,
-//                dueDate = entity.dueDate,
-//                state = entity.state,
-//                expired = entity.expired,
-//                webUrl = entity.webUrl,
-//                // Use direct entity relationships and map them to domain objects using the createLazyMappedList method
-//                issues =
-//                    proxyFactory.createLazyMappedList(
-//                        { entity.issues },
-//                        { issueMapper.toDomain(it) },
-//                    ),
-//                mergeRequests =
-//                    proxyFactory.createLazyMappedList(
-//                        { entity.mergeRequests },
-//                        { mergeRequestMapper.toDomain(it) },
-//                    ),
-//            )
-//        }
-//
-//        /**
-//         * Converts a list of SQL MilestoneEntity objects to a list of domain Milestone objects
-//         */
-//        override fun toDomainList(entities: Iterable<MilestoneEntity>): List<Milestone> = entities.map { toDomain(it) }
-//    }
+package com.inso_world.binocular.infrastructure.sql.mapper
+
+import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingContext
+import com.inso_world.binocular.infrastructure.sql.persistence.entity.MilestoneEntity
+import com.inso_world.binocular.infrastructure.sql.persistence.entity.toEntity
+import com.inso_world.binocular.model.Issue
+import com.inso_world.binocular.model.MergeRequest
+import com.inso_world.binocular.model.Milestone
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
+import org.springframework.stereotype.Component
+
+@Component
+internal class MilestoneMapper {
+    private val logger: Logger = LoggerFactory.getLogger(MilestoneMapper::class.java)
+
+    @Autowired
+    private lateinit var ctx: MappingContext
+
+    @Autowired
+    @Lazy
+    private lateinit var issueMapper: IssueMapper
+
+    @Autowired
+    @Lazy
+    private lateinit var mergeRequestMapper: MergeRequestMapper
+
+    /**
+     * Converts a domain Milestone to a SQL MilestoneEntity
+     */
+    fun toEntity(domain: Milestone): MilestoneEntity {
+        val milestoneContextKey = domain.id ?: "new-${System.identityHashCode(domain)}"
+        ctx.entity.milestone[milestoneContextKey]?.let {
+            logger.trace("toEntity: Milestone-Cache hit: '$milestoneContextKey'")
+            return it
+        }
+
+        val entity = domain.toEntity()
+
+        ctx.entity.milestone.computeIfAbsent(milestoneContextKey) { entity }
+
+        return entity
+    }
+
+    /**
+     * Converts a SQL MilestoneEntity to a domain Milestone
+     *
+     * Uses lazy loading proxies for relationships, which will only be loaded
+     * when accessed. This provides a consistent API regardless of the database
+     * implementation and avoids the N+1 query problem.
+     */
+    fun toDomain(entity: MilestoneEntity): Milestone {
+        val milestoneContextKey = entity.id?.toString() ?: "new-${System.identityHashCode(entity)}"
+        ctx.domain.milestone[milestoneContextKey]?.let {
+            logger.trace("toDomain: Milestone-Cache hit: '$milestoneContextKey'")
+            return it
+        }
+
+        val domain = entity.toDomain()
+        ctx.domain.milestone.computeIfAbsent(milestoneContextKey) { domain }
+
+        val issues = entity.issues.map { issueEntity -> issueMapper.toDomain(issueEntity) }
+        val mergeRequests = entity.mergeRequests.map { mrEntity -> mergeRequestMapper.toDomain(mrEntity) }
+
+        domain.issues = issues
+        domain.mergeRequests = mergeRequests
+
+        return domain
+    }
+
+    /**
+     * Converts a list of SQL MilestoneEntity objects to a list of domain Milestone objects
+     */
+    fun toDomainList(entities: Iterable<MilestoneEntity>): List<Milestone> = entities.map { toDomain(it) }
+}

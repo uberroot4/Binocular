@@ -14,8 +14,6 @@ internal class MappingSessionAspect {
     @Autowired
     private lateinit var mappingScope: MappingScope
 
-//    @Autowired
-//    private lateinit var mappingContext: MappingContext
 
     private val logger: Logger = LoggerFactory.getLogger(MappingSessionAspect::class.java)
 

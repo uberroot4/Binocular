@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.PreRemove
@@ -44,6 +45,9 @@ internal data class UserEntity(
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "repository_id", nullable = false, updatable = false)
     var repository: RepositoryEntity? = null,
+
+    @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
+    var issues: MutableList<IssueEntity> = mutableListOf(),
 ) : AbstractEntity() {
     override fun uniqueKey(): String {
         val repo = this.repository ?: throw IllegalStateException("RepositoryEntity required for uniqueKey")
@@ -72,6 +76,7 @@ internal data class UserEntity(
             email = this.email,
             name = this.name,
             repository = null,
+            issues = emptyList(), // Issues will be populated by the mapper
         )
 
     override fun toString(): String = super.toString()
@@ -106,4 +111,5 @@ internal fun User.toEntity(): UserEntity =
         repository = null,
         committedCommits = mutableSetOf(),
         authoredCommits = mutableSetOf(),
+        issues = mutableListOf(), // Issues will be populated by the mapper
     )

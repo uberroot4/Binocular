@@ -35,7 +35,6 @@ internal class MappingScope : Scope {
     fun startSession(): String {
         val depth = sessionDepth.incrementAndGet()
         if (depth == 1) {
-            // outermost session
             val newId = UUID.randomUUID().toString().also { sessionId.store(it) }
             context.clear()
             logger.debug("Started new outermost session: {}", newId)
@@ -62,7 +61,6 @@ internal class MappingScope : Scope {
         val id = sessionId.load()!!
         val after = sessionDepth.decrementAndGet()
         if (after == 0) {
-            // all sessions ended
             context.clear()
             sessionId.store(null)
             logger.debug("Session {} ended; context cleared", id)
@@ -81,7 +79,6 @@ internal class MappingScope : Scope {
                 "Tried to retrieve @Scope(\"mapping\") bean outside of a @MappingSession",
             )
         }
-        // Atomic compute-if-absent on the shared ConcurrentHashMap
         return context.computeIfAbsent(name) {
             objectFactory.getObject()
         }
@@ -93,7 +90,6 @@ internal class MappingScope : Scope {
         name: String,
         callback: Runnable,
     ) {
-        // no‑op
     }
 
     override fun resolveContextualObject(key: String): Any? = null

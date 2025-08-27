@@ -78,6 +78,17 @@ internal data class CommitEntity(
         ],
     )
     var branches: MutableSet<BranchEntity> = mutableSetOf(),
+
+    // Bidirectional many-to-many with BuildEntity: each commit can be associated with multiple builds
+    @BatchSize(size = 256)
+    @ManyToMany
+    @JoinTable(
+        name = "build_commits",
+        joinColumns = [JoinColumn(name = "commit_id")],
+        inverseJoinColumns = [JoinColumn(name = "build_id")],
+    )
+    var builds: MutableSet<BuildEntity> = mutableSetOf(),
+
 //    @ManyToOne(fetch = FetchType.LAZY, optional = true, cascade = [CascadeType.PERSIST])
 //    var author: UserEntity? = null,
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

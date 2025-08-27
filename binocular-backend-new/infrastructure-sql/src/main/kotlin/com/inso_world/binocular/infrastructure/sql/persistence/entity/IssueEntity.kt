@@ -1,5 +1,7 @@
 package com.inso_world.binocular.infrastructure.sql.persistence.entity
 
+import com.inso_world.binocular.model.Mention
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -8,6 +10,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.persistence.Temporal
 import jakarta.persistence.TemporalType
@@ -39,33 +42,33 @@ internal data class IssueEntity(
     var state: String? = null,
     @Column(name = "web_url")
     var webUrl: String? = null,
-// @OneToMany(mappedBy = "issue", cascade = [CascadeType.ALL], orphanRemoval = true)
-// var labels: MutableList<LabelEntity> = mutableListOf()
-// @OneToMany(mappedBy = "issue", cascade = [CascadeType.ALL], orphanRemoval = true)
-// var mentions: MutableList<MentionEntity> = mutableListOf()
-// @ManyToMany(mappedBy = "issues")
-// var accounts: MutableList<AccountEntity> = mutableListOf()
-// @ManyToMany
-// @JoinTable(
-//     name = "issue_commit_connections",
-//     joinColumns = [JoinColumn(name = "issue_id")],
-//     inverseJoinColumns = [JoinColumn(name = "commit_id")],
-// )
-// var commits: MutableList<CommitEntity> = mutableListOf()
-// @ManyToMany
-// @JoinTable(
-//     name = "issue_milestone_connections",
-//     joinColumns = [JoinColumn(name = "issue_id")],
-//     inverseJoinColumns = [JoinColumn(name = "milestone_id")],
-// )
-// var milestones: MutableList<MilestoneEntity> = mutableListOf()
-// @ManyToMany
-// @JoinTable(
-//     name = "issue_note_connections",
-//     joinColumns = [JoinColumn(name = "issue_id")],
-//     inverseJoinColumns = [JoinColumn(name = "note_id")],
-// )
-// var notes: MutableList<NoteEntity> = mutableListOf()
+    @OneToMany(mappedBy = "issue", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var labels: MutableList<LabelEntity> = mutableListOf(),
+    @OneToMany(mappedBy = "issue", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var mentions: MutableList<MentionEntity> = mutableListOf(),
+    @ManyToMany(mappedBy = "issues")
+    var accounts: MutableList<AccountEntity> = mutableListOf(),
+    @ManyToMany
+    @JoinTable(
+        name = "issue_commit_connections",
+        joinColumns = [JoinColumn(name = "issue_id")],
+        inverseJoinColumns = [JoinColumn(name = "commit_id")],
+    )
+    var commits: MutableList<CommitEntity> = mutableListOf(),
+    @ManyToMany
+    @JoinTable(
+        name = "issue_milestone_connections",
+        joinColumns = [JoinColumn(name = "issue_id")],
+        inverseJoinColumns = [JoinColumn(name = "milestone_id")],
+    )
+    var milestones: MutableList<MilestoneEntity> = mutableListOf(),
+    @ManyToMany
+    @JoinTable(
+        name = "issue_note_connections",
+        joinColumns = [JoinColumn(name = "issue_id")],
+        inverseJoinColumns = [JoinColumn(name = "note_id")],
+    )
+    var notes: MutableList<NoteEntity> = mutableListOf(),
     @ManyToMany
     @JoinTable(
         name = "issue_user_connections",
@@ -95,4 +98,91 @@ internal data class IssueEntity(
     }
 
     override fun hashCode(): Int = Objects.hash(id, iid, title, description, createdAt, closedAt, updatedAt, state, webUrl, users)
+
+    /**
+     * Gets the mentions as domain model mentions
+     */
+    fun getDomainMentions(): List<Mention> {
+        return mentions.map { 
+            Mention(
+                commit = it.commit,
+                createdAt = it.createdAt,
+                closes = it.closes
+            )
+        }
+    }
+
+    /**
+     * Sets the mentions from domain model mentions
+     */
+    fun setDomainMentions(mentions: List<Mention>) {
+        this.mentions.clear()
+        this.mentions.addAll(mentions.map { 
+            MentionEntity(
+                null,
+                it.commit,
+                it.createdAt,
+                it.closes,
+                null,
+                this,
+                null,
+                null
+            )
+        })
+    }
+
+    /**
+     * Gets the labels as domain model labels
+     */
+    fun getDomainLabels(): List<String> {
+        return labels.map { it.value }
+    }
+
+    /**
+     * Sets the labels from domain model labels
+     */
+    fun setDomainLabels(labels: List<String>) {
+        this.labels.clear()
+        this.labels.addAll(labels.map { LabelEntity(null, it, this, null) })
+    }
+
+    fun toDomain() = com.inso_world.binocular.model.Issue(
+        id = this.id?.toString(),
+        iid = this.iid,
+        title = this.title,
+        description = this.description,
+        createdAt = this.createdAt,
+        closedAt = this.closedAt,
+        updatedAt = this.updatedAt,
+        state = this.state,
+        webUrl = this.webUrl,
+        labels = getDomainLabels(),
+        mentions = getDomainMentions(),
+        // These relationships will be populated by the mapper
+        accounts = emptyList(),
+        commits = emptyList(),
+        milestones = emptyList(),
+        notes = emptyList(),
+        users = emptyList()
+    )
+}
+
+internal fun com.inso_world.binocular.model.Issue.toEntity(): IssueEntity {
+    val entity = IssueEntity(
+        id = this.id?.toLong(),
+        iid = this.iid,
+        title = this.title,
+        description = this.description,
+        createdAt = this.createdAt,
+        closedAt = this.closedAt,
+        updatedAt = this.updatedAt,
+        state = this.state,
+        webUrl = this.webUrl
+    )
+
+    // Set labels and mentions
+    entity.setDomainLabels(this.labels)
+    entity.setDomainMentions(this.mentions)
+
+    return entity
 }

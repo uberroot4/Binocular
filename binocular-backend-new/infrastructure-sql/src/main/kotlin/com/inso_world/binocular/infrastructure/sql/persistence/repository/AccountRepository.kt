@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository
 import java.util.stream.Stream
 
 @Repository
-internal interface NoteRepository : JpaRepository<NoteEntity, Long>, JpaSpecificationExecutor<NoteEntity> {
-    fun findAllByAccountsContaining(account: AccountEntity): Stream<NoteEntity>
-    fun findAllByIssuesContaining(issue: IssueEntity): Stream<NoteEntity>
-    fun findAllByMergeRequestsContaining(mergeRequest: MergeRequestEntity): Stream<NoteEntity>
+internal interface AccountRepository : JpaRepository<AccountEntity, Long>, JpaSpecificationExecutor<AccountEntity> {
+    fun findAllByIssuesContaining(issue: IssueEntity): Stream<AccountEntity>
+    fun findAllByMergeRequestsContaining(mergeRequest: MergeRequestEntity): Stream<AccountEntity>
+    fun findAllByNotesContaining(note: NoteEntity): Stream<AccountEntity>
 }

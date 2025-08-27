@@ -1,6 +1,5 @@
 package com.inso_world.binocular.infrastructure.sql.mapper
 
-import com.inso_world.binocular.core.persistence.proxy.RelationshipProxyFactory
 import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingContext
 import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingScope
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.BranchEntity
@@ -21,9 +20,6 @@ internal class BranchMapper {
 
     @Autowired
     private lateinit var commitMapper: CommitMapper
-
-    @Autowired
-    private lateinit var proxyFactory: RelationshipProxyFactory
 
     @Autowired
     @Lazy
@@ -51,7 +47,6 @@ internal class BranchMapper {
         val entity = domain.toEntity()
         ctx.entity.branch.computeIfAbsent(branchContextKey) { entity }
 
-        // Commit is a child of Branch, hence it is mapped here
         domain.commits
             .map {
                 ctx.entity.commit[it.sha]
@@ -63,24 +58,14 @@ internal class BranchMapper {
         return entity
     }
 
-    /**
-     * Converts a SQL BranchEntity to a domain Branch
-     *
-     * Uses lazy loading proxies for relationships, which will only be loaded
-     * when accessed. This provides a consistent API regardless of the database
-     * implementation and avoids the N+1 query problem.
-     */
     fun toDomain(entity: BranchEntity): Branch {
         val branchContextKey = entity.uniqueKey()
         ctx.domain.branch[branchContextKey]?.let { return it }
 
         val domain = entity.toDomain()
 
-        // Commit is a child of Branch, hence it is mapped here
         commitMapper.toDomainGraph(entity.commits.asSequence()).map {
-            //  add all parents also to the branch (git behavior of git rev-list --count <rev>)
             (setOf(it) + it.parents).forEach { relative -> domain.commits.add(relative) }
-//            domain.addCommit(it)
         }
 
         ctx.domain.branch.computeIfAbsent(branchContextKey) { domain }
@@ -97,9 +82,7 @@ internal class BranchMapper {
 
         val domain = entity.toDomain()
 
-        // Commit is a child of Branch, hence it is mapped here
         commitMapper.toDomainFull(entity.commits, repository).map {
-            //  add all parents also to the branch (git behavior of git rev-list --count <rev>)
             (setOf(it) + it.parents).forEach { relative -> domain.commits.add(relative) }
         }
 

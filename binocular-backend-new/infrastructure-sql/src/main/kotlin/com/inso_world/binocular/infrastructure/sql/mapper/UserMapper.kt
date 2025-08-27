@@ -20,6 +20,9 @@ internal class UserMapper {
     @Autowired
     private lateinit var commitMapper: CommitMapper
 
+    @Autowired
+    private lateinit var issueMapper: IssueMapper
+
     /**
      * Converts a domain User to a SQL UserEntity
      */
@@ -53,6 +56,11 @@ internal class UserMapper {
 
         val domain = entity.toDomain()
 
+        val issues = entity.issues.map { issueEntity -> issueMapper.toDomain(issueEntity) }
+        val issuesField = domain.javaClass.getDeclaredField("issues")
+        issuesField.isAccessible = true
+        issuesField.set(domain, issues)
+
         ctx.domain.user.computeIfAbsent(userContextKey) { domain }
 
         return domain
@@ -70,6 +78,7 @@ internal class UserMapper {
         mappedDomain.authoredCommits.addAll(
             commitMapper.toDomainFull(entity.authoredCommits, repository),
         )
+
 
         return mappedDomain
     }

@@ -1,6 +1,5 @@
 package com.inso_world.binocular.infrastructure.sql.mapper
 
-import com.inso_world.binocular.core.persistence.proxy.RelationshipProxyFactory
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.ProjectEntity
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.toEntity
 import com.inso_world.binocular.model.Project
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component
 internal class ProjectMapper
     @Autowired
     constructor(
-        private val proxyFactory: RelationshipProxyFactory,
         @Lazy private val repoMapper: RepositoryMapper,
     ) {
         var logger: Logger = LoggerFactory.getLogger(ProjectMapper::class.java)
