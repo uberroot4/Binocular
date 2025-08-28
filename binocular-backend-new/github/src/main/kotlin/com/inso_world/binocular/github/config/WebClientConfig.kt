@@ -1,14 +1,14 @@
-package com.inso_world.binocular.cli.config
+package com.inso_world.binocular.github.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
-class WebClientConfig {
+open class WebClientConfig {
 
     @Bean
-    fun webClient(): WebClient {
+    open fun webClient(): WebClient {
         return WebClient.builder().build()
     }
 }

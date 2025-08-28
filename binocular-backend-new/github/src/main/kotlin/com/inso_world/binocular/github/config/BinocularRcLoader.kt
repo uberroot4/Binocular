@@ -1,4 +1,4 @@
-package com.inso_world.binocular.cli.config
+package com.inso_world.binocular.github.config
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue

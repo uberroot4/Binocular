@@ -28,7 +28,7 @@ open class Index(
     }
 
     @Command(command = ["accounts"], description = "Index accounts from ITS")
-    open fun issues(
+    open fun accounts(
         @Option(
             longNames = ["repo_owner"],
             shortNames = ['o'],
@@ -52,7 +52,7 @@ open class Index(
         logger.debug("Project '$projectName'")
         val project = this.projectService.getOrCreateProject(projectName)
         // TODO index accounts into the right project
-        itsService.indexAccountsFromGitHub(repoOwner, repoName).block()
+        itsService.indexAccountsFromGitHub(repoOwner, repoName, project).block()
         logger.trace("<<< index(owner: $repoOwner, name: $repoName)")
     }
 

@@ -26,6 +26,18 @@
             </roles>
             <timezone>Europe/Vienna</timezone>
         </developer>
+        <developer>
+            <id>kastenmeierk</id>
+            <name>Kai Kastenmeier</name>
+            <email>kai.kastenmeier@inso-world.com</email>
+            <organization>INSO/BUSY</organization>
+            <organizationUrl>https://www.inso-world.com</organizationUrl>
+            <roles>
+                <role>researcher</role>
+                <role>developer</role>
+            </roles>
+            <timezone>Europe/Vienna</timezone>
+        </developer>
     </developers>
 
     <properties>
@@ -65,6 +77,11 @@
         <dependency>
             <groupId>com.inso-world.binocular</groupId>
             <artifactId>domain</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.inso-world.binocular</groupId>
+            <artifactId>github</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!--Non binocular below -->
@@ -129,10 +146,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
     </dependencies>
 

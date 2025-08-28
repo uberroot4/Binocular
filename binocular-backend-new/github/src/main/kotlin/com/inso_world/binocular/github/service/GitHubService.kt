@@ -1,10 +1,10 @@
-package com.inso_world.binocular.cli.service.its
+package com.inso_world.binocular.github.service
 
-import com.inso_world.binocular.cli.config.BinocularRcLoader
-import com.inso_world.binocular.cli.exception.ServiceException
-import com.inso_world.binocular.cli.index.its.ItsGitHubUser
-import com.inso_world.binocular.cli.index.its.GraphQlUserResponse
-import com.inso_world.binocular.cli.index.its.PageInfo
+import com.inso_world.binocular.github.config.BinocularRcLoader
+import com.inso_world.binocular.github.dto.GraphQlUserResponse
+import com.inso_world.binocular.github.dto.ItsGitHubUser
+import com.inso_world.binocular.github.dto.PageInfo
+import com.inso_world.binocular.github.exception.ServiceException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -83,5 +83,3 @@ class GitHubService (private val webClient: WebClient, private val configLoader:
         return fetchAllPages()
     }
 }
-
-

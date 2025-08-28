@@ -1,4 +1,4 @@
-package com.inso_world.binocular.cli.index.its
+package com.inso_world.binocular.github.dto
 
 data class ItsAssignableUsers(
     val nodes: List<ItsGitHubUser>,
