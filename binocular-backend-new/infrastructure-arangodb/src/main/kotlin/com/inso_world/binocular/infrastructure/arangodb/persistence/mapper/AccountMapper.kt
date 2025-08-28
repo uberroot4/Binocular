@@ -23,6 +23,7 @@ class AccountMapper
         override fun toEntity(domain: Account): AccountEntity =
             AccountEntity(
                 id = domain.id,
+                gid = domain.gid,
                 platform = domain.platform,
                 login = domain.login,
                 name = domain.name,
@@ -41,6 +42,7 @@ class AccountMapper
         override fun toDomain(entity: AccountEntity): Account =
             Account(
                 id = entity.id,
+                gid = entity.gid,
                 platform = entity.platform,
                 login = entity.login,
                 name = entity.name,
