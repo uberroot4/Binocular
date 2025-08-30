@@ -89,6 +89,7 @@ function Chart<SettingsType extends TestFileContributorSettings, DataType>(props
       props.parameters,
       props.settings,
       props.authorList,
+      props.fileList,
     );
     setChartData(chartData);
   }, [

@@ -7,6 +7,7 @@ import { DataPluginCommitsUsersConnection } from '../../../../interfaces/dataPlu
 import { AuthorType } from '../../../../../types/data/authorType.ts';
 import { ParametersType } from '../../../../../types/parameters/parametersType.ts';
 import { TestFileContributorSettings } from '../settings/settings.tsx';
+import { FileListElementType } from '../../../../../types/data/fileListType.ts';
 
 export function createPieChartData(
   commits: DataPluginCommit[],
@@ -17,19 +18,24 @@ export function createPieChartData(
   parameters: ParametersType,
   settings: TestFileContributorSettings,
   authorList: AuthorType[],
+  fileList: FileListElementType[],
 ): TestFileContributorChartData[] {
   if (commits.length === 0) return []; // Early return if no commits are available
   if (authorList.length === 0) return []; // Early return if no authors are available
+  if (fileList.length === 0) return []; // Early return if no files are available
+  if (!fileList.some((file: FileListElementType) => file.checked)) return []; // Early return if no files are selected
 
   // Filter authors based on selection and parent status
   const selectedAuthors: AuthorType[] = authorList.filter((author: AuthorType) => author.selected && author.parent == -1);
   const mergedAuthors: AuthorType[] = authorList.filter((author: AuthorType) => author.selected && author.parent > 0);
-
   if (selectedAuthors.length === 0) return []; // Early return if no authors are selected
 
   // Filter files for test files
   const testFiles: DataPluginFile[] = files.filter(
-    (file: DataPluginFile) => file.path.includes('src/test/') && !file.path.includes('src/test/resources/'),
+    (file: DataPluginFile) =>
+      file.path.includes('src/test/') &&
+      !file.path.includes('src/test/resources/') &&
+      fileList.some((f: FileListElementType) => f.checked && f.element._id === file._id),
   );
 
   // Filter out commits that are merge commits if the flag is set
