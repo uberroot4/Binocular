@@ -5,6 +5,9 @@ import General from './general.ts';
 import Files from './files.ts';
 import Builds from './builds.ts';
 import Branches from './branches.ts';
+import CommitsFilesConnections from './commitsFilesConnections.ts';
+import CommitsUsersConnections from './commitsUsersConnections.ts';
+import JacocoReports from './jacocoReports.ts';
 
 class MockData implements DataPlugin {
   public name = 'Mock Data';
@@ -23,6 +26,9 @@ class MockData implements DataPlugin {
   public general;
   public files;
   public branches;
+  public jacocoReports;
+  public commitsFilesConnections;
+  public commitsUsersConnections;
 
   constructor() {
     this.commits = new Commits();
@@ -31,6 +37,9 @@ class MockData implements DataPlugin {
     this.general = new General();
     this.files = new Files();
     this.branches = new Branches();
+    this.jacocoReports = new JacocoReports();
+    this.commitsFilesConnections = new CommitsFilesConnections();
+    this.commitsUsersConnections = new CommitsUsersConnections();
   }
 
   public async init() {}
