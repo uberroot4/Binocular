@@ -11,10 +11,10 @@ import {
   TestFileContributorState,
 } from '../reducer';
 import { DataPlugin } from '../../../../interfaces/dataPlugin.ts';
-import { DataPluginFiles } from '../../../../interfaces/dataPluginInterfaces/dataPluginFiles.ts';
+import { DataPluginFile } from '../../../../interfaces/dataPluginInterfaces/dataPluginFiles.ts';
 import { DataPluginCommit } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommits.ts';
 import { DataPluginCommitsFilesConnection } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommitsFilesConnections.ts';
-import { DataPluginUsers } from '../../../../interfaces/dataPluginInterfaces/dataPluginUsers.ts';
+import { DataPluginUser } from '../../../../interfaces/dataPluginInterfaces/dataPluginUsers.ts';
 import { DataPluginCommitsUsersConnection } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommitsUsersConnections.ts';
 
 export default function* (dataConnection: DataPlugin) {
@@ -37,9 +37,9 @@ function* fetchChangesData(dataConnection: DataPlugin) {
     dataConnection.commits.getAll(state.plugin.dateRange.from, state.plugin.dateRange.to),
   );
   yield put(setCommits(commits));
-  const files: DataPluginFiles[] = yield call(() => dataConnection.files.getAll());
+  const files: DataPluginFile[] = yield call(() => dataConnection.files.getAll());
   yield put(setFiles(files));
-  const users: DataPluginUsers[] = yield call(() => dataConnection.users.getAll());
+  const users: DataPluginUser[] = yield call(() => dataConnection.users.getAll());
   yield put(setUsers(users));
   const commitsFilesConnections: DataPluginCommitsFilesConnection[] = yield call(() =>
     dataConnection.commitsFilesConnections.getAll(state.plugin.dateRange.from, state.plugin.dateRange.to),

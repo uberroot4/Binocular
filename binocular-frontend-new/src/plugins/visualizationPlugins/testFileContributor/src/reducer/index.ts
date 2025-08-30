@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { DataPluginFiles } from '../../../../interfaces/dataPluginInterfaces/dataPluginFiles.ts';
+import { DataPluginFile } from '../../../../interfaces/dataPluginInterfaces/dataPluginFiles.ts';
 import { DataPluginCommit } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommits.ts';
 import { DataPluginCommitsFilesConnection } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommitsFilesConnections.ts';
-import { DataPluginUsers } from '../../../../interfaces/dataPluginInterfaces/dataPluginUsers.ts';
+import { DataPluginUser } from '../../../../interfaces/dataPluginInterfaces/dataPluginUsers.ts';
 import { DataPluginCommitsUsersConnection } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommitsUsersConnections.ts';
 
 export enum DataState {
@@ -18,8 +18,8 @@ interface DateRange {
 
 export interface TestFileContributorState {
   commits: DataPluginCommit[];
-  files: DataPluginFiles[];
-  users: DataPluginUsers[];
+  files: DataPluginFile[];
+  users: DataPluginUser[];
   commitsFilesConnections: DataPluginCommitsFilesConnection[];
   commitsUsersConnections: DataPluginCommitsUsersConnection[];
   dateRange: DateRange;
@@ -43,10 +43,10 @@ export const changesSlice = createSlice({
     setCommits: (state, action: PayloadAction<DataPluginCommit[]>) => {
       state.commits = action.payload;
     },
-    setFiles: (state, action: PayloadAction<DataPluginFiles[]>) => {
+    setFiles: (state, action: PayloadAction<DataPluginFile[]>) => {
       state.files = action.payload;
     },
-    setUsers: (state, action: PayloadAction<DataPluginUsers[]>) => {
+    setUsers: (state, action: PayloadAction<DataPluginUser[]>) => {
       state.users = action.payload;
     },
     setCommitsFilesConnections: (state, action: PayloadAction<DataPluginCommitsFilesConnection[]>) => {

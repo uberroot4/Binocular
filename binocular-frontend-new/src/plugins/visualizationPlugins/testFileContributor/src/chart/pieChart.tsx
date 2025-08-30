@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { MutableRefObject, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { TestFileContributorChartData } from './chart.tsx';
 import styles from './pie-chart.module.css';
+import { Pie, PieArcDatum } from 'd3';
 
 const MARGIN = { top: 30, left: 150 };
 const PADDING = 10; // padding around the pie chart
@@ -13,48 +14,48 @@ type PieChartProps = {
   commitType: string;
 };
 
-const colors = ['#e0ac2b', '#e85252', '#6689c6', '#9a6fb0', '#a53253', '#69b3a2'];
-
 export const PieChart = ({ width, height, data, commitType }: PieChartProps) => {
-  const ref = useRef(null);
+  const ref: MutableRefObject<SVGGElement | null> = useRef(null);
   const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
   const [tableData, setTableData] = useState<{ added: number; deleted: number }[]>([]);
-  const radius = Math.min(width - 2 * MARGIN.left, height - 2 * MARGIN.top) / 2;
+  const radius: number = Math.min(width - 2 * MARGIN.left, height - 2 * MARGIN.top) / 2;
 
-  const pie = useMemo(() => {
-    const pieGenerator = d3.pie<void, TestFileContributorChartData>().value((d) => d.value.added + d.value.deleted);
+  const pie: PieArcDatum<TestFileContributorChartData>[] = useMemo(() => {
+    const pieGenerator: Pie<void, TestFileContributorChartData> = d3
+      .pie<void, TestFileContributorChartData>()
+      .value((d: TestFileContributorChartData) => d.value.added + d.value.deleted);
     return pieGenerator(data ?? []);
   }, [data]);
 
   const arcGenerator = d3.arc();
 
-  const shapes = pie.map((grp, i) => {
-    // First arc is for the Pie
+  const shapes = pie.map((grp: PieArcDatum<TestFileContributorChartData>, i: number) => {
+    // The first arc is for the Pie
     const sliceInfo = {
       innerRadius: 0,
       outerRadius: radius,
       startAngle: grp.startAngle,
       endAngle: grp.endAngle,
     };
-    const centroid = arcGenerator.centroid(sliceInfo);
-    const slicePath = arcGenerator(sliceInfo);
+    const centroid: [number, number] = arcGenerator.centroid(sliceInfo);
+    const slicePath: string | undefined = arcGenerator(sliceInfo) ?? undefined;
 
-    // Second arc is for the legend inflexion point
+    // The second arc is for the legend inflexion point
     const inflexionInfo = {
       innerRadius: radius + PADDING,
       outerRadius: radius + PADDING,
       startAngle: grp.startAngle,
       endAngle: grp.endAngle,
     };
-    const inflexionPoint = arcGenerator.centroid(inflexionInfo);
+    const inflexionPoint: [number, number] = arcGenerator.centroid(inflexionInfo);
 
-    const isRightLabel = inflexionPoint[0] > 0;
-    const labelPosX = inflexionPoint[0] + 50 * (isRightLabel ? 1 : -1);
-    const textAnchor = isRightLabel ? 'start' : 'end';
-    const labelAdded = commitType === 'added' ? '(+' + grp.data.value.added + ')' : '';
-    const labelDeleted = commitType === 'deleted' ? '(-' + grp.data.value.deleted + ')' : '';
-    const labelModified = commitType === 'modified' ? '(+' + grp.data.value.added + ') (-' + grp.data.value.deleted + ')' : '';
-    const label = grp.data.name + ' ' + labelAdded + labelDeleted + labelModified;
+    const isRightLabel: boolean = inflexionPoint[0] > 0;
+    const labelPosX: number = inflexionPoint[0] + 50 * (isRightLabel ? 1 : -1);
+    const textAnchor: 'start' | 'end' = isRightLabel ? 'start' : 'end';
+    const labelAdded: string = commitType === 'added' ? '(+' + grp.data.value.added + ')' : '';
+    const labelDeleted: string = commitType === 'deleted' ? '(-' + grp.data.value.deleted + ')' : '';
+    const labelModified: string = commitType === 'modified' ? '(+' + grp.data.value.added + ') (-' + grp.data.value.deleted + ')' : '';
+    const label: string = grp.data.name + ' ' + labelAdded + labelDeleted + labelModified;
 
     return (
       <g
@@ -85,7 +86,7 @@ export const PieChart = ({ width, height, data, commitType }: PieChartProps) => 
           }
           setTooltip({ visible: false, content: '', x: 0, y: 0 });
         }}>
-        <path d={slicePath} fill={colors[i % 6]} />
+        <path d={slicePath} fill={grp.data.color} />
         <circle cx={centroid[0]} cy={centroid[1]} r={2} />
         <line x1={centroid[0]} y1={centroid[1]} x2={inflexionPoint[0]} y2={inflexionPoint[1]} stroke={'black'} fill={'black'} />
         <line x1={inflexionPoint[0]} y1={inflexionPoint[1]} x2={labelPosX} y2={inflexionPoint[1]} stroke={'black'} fill={'black'} />
@@ -117,6 +118,7 @@ export const PieChart = ({ width, height, data, commitType }: PieChartProps) => 
             fontSize: '12px',
             whiteSpace: 'normal',
             boxShadow: '0 0 10px rgba(0, 0, 0, 0.6)',
+            zIndex: 1000,
           }}>
           {tooltip.content}
           {tableData.length > 0 && (
