@@ -1,53 +1,51 @@
-import { RefObject, useEffect, useState } from 'react';
-import { DataPlugin } from '../../../../interfaces/dataPlugin.ts';
-import { SettingsType } from '../settings/settings.tsx';
-import { AuthorType } from '../../../../../types/data/authorType.ts';
-import { SprintType } from '../../../../../types/data/sprintType.ts';
-import { throttle } from 'throttle-debounce';
+import { useEffect, useState } from 'react';
+import { TestFileContributorSettings } from '../settings/settings.tsx';
 import { useDispatch, useSelector } from 'react-redux';
-import { ParametersType } from '../../../../../types/parameters/parametersType.ts';
-import { Store } from '@reduxjs/toolkit';
 import { DataState, setDateRange } from '../reducer';
 import { PieChart } from './pieChart.tsx';
 import { createPieChartData } from '../utilities/dataConverter.ts';
+import { VisualizationPluginProperties } from '../../../../interfaces/visualizationPluginInterfaces/visualizationPluginProperties.ts';
+import { DataPluginCommit } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommits.ts';
+import { DataPluginFile } from '../../../../interfaces/dataPluginInterfaces/dataPluginFiles.ts';
+import { DataPluginUser } from '../../../../interfaces/dataPluginInterfaces/dataPluginUsers.ts';
+import { DataPluginCommitsUsersConnection } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommitsUsersConnections.ts';
+import { DataPluginCommitsFilesConnection } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommitsFilesConnections.ts';
+import { throttle } from 'throttle-debounce';
 
 export interface Lines {
   added: number;
   deleted: number;
 }
-
 export interface TestFileContributorChartData {
+  color: string;
   name: string;
   value: Lines;
 }
 
-function Chart(props: {
-  settings: SettingsType;
-  dataConnection: DataPlugin;
-  authorList: AuthorType[];
-  sprintList: SprintType[];
-  parameters: ParametersType;
-  chartContainerRef: RefObject<HTMLDivElement>;
-  store: Store;
-}) {
-  /*
-   * Creating Dispatch and Root State for interaction with the reducer State
-   */
+function Chart<SettingsType extends TestFileContributorSettings, DataType>(props: VisualizationPluginProperties<SettingsType, DataType>) {
+  // * -----------------------------
+  // * Creating Dispatch and Root State for interaction with the reducer State
+  // * -----------------------------
   type RootState = ReturnType<typeof props.store.getState>;
   type AppDispatch = typeof props.store.dispatch;
   const useAppDispatch = () => useDispatch<AppDispatch>();
   const dispatch: AppDispatch = useAppDispatch();
-  /*
-   * -----------------------------
-   */
-  //Redux Global State
-  const commits = useSelector((state: RootState) => state.plugin.commits);
-  const files = useSelector((state: RootState) => state.plugin.files);
-  const users = useSelector((state: RootState) => state.plugin.users);
-  const commitsFilesConnections = useSelector((state: RootState) => state.plugin.commitsFilesConnections);
-  const commitsUsersConnections = useSelector((state: RootState) => state.plugin.commitsUsersConnections);
-  const dataState = useSelector((state: RootState) => state.plugin.dataState);
-  //React Component State
+  // * -----------------------------
+  // * Redux Global State
+  // * -----------------------------
+  const commits: DataPluginCommit[] = useSelector((state: RootState) => state.plugin.commits);
+  const files: DataPluginFile[] = useSelector((state: RootState) => state.plugin.files);
+  const users: DataPluginUser[] = useSelector((state: RootState) => state.plugin.users);
+  const commitsFilesConnections: DataPluginCommitsFilesConnection[] = useSelector(
+    (state: RootState) => state.plugin.commitsFilesConnections,
+  );
+  const commitsUsersConnections: DataPluginCommitsUsersConnection[] = useSelector(
+    (state: RootState) => state.plugin.commitsUsersConnections,
+  );
+  const dataState: DataState = useSelector((state: RootState) => state.plugin.dataState);
+  // * -----------------------------
+  // * React Component State
+  // * -----------------------------
   const [chartWidth, setChartWidth] = useState(100);
   const [chartHeight, setChartHeight] = useState(100);
   const [chartData, setChartData] = useState<TestFileContributorChartData[]>();
@@ -88,8 +86,9 @@ function Chart(props: {
       users,
       commitsFilesConnections,
       commitsUsersConnections,
-      props.parameters.parametersGeneral.excludeMergeCommits,
-      props.settings.selectedCommitType,
+      props.parameters,
+      props.settings,
+      props.authorList,
     );
     setChartData(chartData);
   }, [
@@ -98,14 +97,16 @@ function Chart(props: {
     users,
     commitsFilesConnections,
     commitsUsersConnections,
-    props.parameters.parametersGeneral.excludeMergeCommits,
-    props.settings.selectedCommitType,
+    props.parameters,
+    props.settings,
+    props.authorList,
+    props.fileList,
   ]);
 
-  // Set Global state when parameters change. This will also conclude in a refresh of the data.
+  // Set DateRange when parameters change
   useEffect(() => {
     dispatch(setDateRange(props.parameters.parametersDateRange));
-  }, [dispatch, props.parameters]);
+  }, [dispatch, props.parameters.parametersDateRange]);
 
   // Trigger Refresh when dataConnection changes
   useEffect(() => {
