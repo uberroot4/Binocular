@@ -9,13 +9,17 @@
  import jakarta.persistence.GenerationType
  import jakarta.persistence.Id
  import jakarta.persistence.Table
+ import jakarta.persistence.UniqueConstraint
  import java.util.Objects
 
  /**
  * SQL-specific Account entity.
  */
  @Entity
- @Table(name = "accounts")
+ @Table(name = "accounts",
+     uniqueConstraints = [
+     UniqueConstraint(columnNames = ["gid", "platform"]),
+ ],)
  data class AccountEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
