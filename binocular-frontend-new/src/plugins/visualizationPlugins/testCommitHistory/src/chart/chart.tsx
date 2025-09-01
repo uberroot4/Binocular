@@ -1,49 +1,44 @@
-import { RefObject, useEffect, useState } from 'react';
-import { DataPlugin } from '../../../../interfaces/dataPlugin.ts';
-import { SettingsType } from '../settings/settings.tsx';
-import { AuthorType } from '../../../../../types/data/authorType.ts';
-import { SprintType } from '../../../../../types/data/sprintType.ts';
+import { useEffect, useState } from 'react';
 import { throttle } from 'throttle-debounce';
 import { useDispatch, useSelector } from 'react-redux';
-import { ParametersType } from '../../../../../types/parameters/parametersType.ts';
-import { Store } from '@reduxjs/toolkit';
 import { DataState, setDateRange } from '../reducer';
-import { BarChart } from './barChart.tsx';
 import { createBarCharData } from '../utilities/dataConverter.ts';
+import { TestCommitHistorySettings } from '../settings/settings.tsx';
+import { VisualizationPluginProperties } from '../../../../interfaces/visualizationPluginInterfaces/visualizationPluginProperties.ts';
+import { DataPluginCommitsFilesConnection } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommitsFilesConnections.ts';
+import { DataPluginCommit } from '../../../../interfaces/dataPluginInterfaces/dataPluginCommits.ts';
+import { DataPluginFile } from '../../../../interfaces/dataPluginInterfaces/dataPluginFiles.ts';
+import { StackedBarChart } from './stackedBarChart.tsx';
 
-export interface TestCommitHistoryChartData {
+export type Group = {
   time: string;
-  amountOfTestCommits: number;
-}
+} & { [user: string]: number };
 
-function Chart(props: {
-  settings: SettingsType;
-  dataConnection: DataPlugin;
-  authorList: AuthorType[];
-  sprintList: SprintType[];
-  parameters: ParametersType;
-  chartContainerRef: RefObject<HTMLDivElement>;
-  store: Store;
-}) {
-  /*
-   * Creating Dispatch and Root State for interaction with the reducer State
-   */
+export type TestCommitHistoryChartData = Group[];
+
+function Chart<SettingsType extends TestCommitHistorySettings, DataType>(props: VisualizationPluginProperties<SettingsType, DataType>) {
+  // * -----------------------------
+  // * Creating Dispatch and Root State for interaction with the reducer State
+  // * -----------------------------
   type RootState = ReturnType<typeof props.store.getState>;
   type AppDispatch = typeof props.store.dispatch;
   const useAppDispatch = () => useDispatch<AppDispatch>();
   const dispatch: AppDispatch = useAppDispatch();
-  /*
-   * -----------------------------
-   */
-  //Redux Global State
-  const commits = useSelector((state: RootState) => state.plugin.commits);
-  const files = useSelector((state: RootState) => state.plugin.files);
-  const commitsFilesConnections = useSelector((state: RootState) => state.plugin.commitsFilesConnections);
-  const dataState = useSelector((state: RootState) => state.plugin.dataState);
-  //React Component State
+  // * -----------------------------
+  // * Redux Global State
+  // * -----------------------------
+  const commits: DataPluginCommit[] = useSelector((state: RootState) => state.plugin.commits);
+  const files: DataPluginFile[] = useSelector((state: RootState) => state.plugin.files);
+  const commitsFilesConnections: DataPluginCommitsFilesConnection[] = useSelector(
+    (state: RootState) => state.plugin.commitsFilesConnections,
+  );
+  const dataState: DataState = useSelector((state: RootState) => state.plugin.dataState);
+  // * -----------------------------
+  // * React Component State
+  // * -----------------------------
   const [chartWidth, setChartWidth] = useState(100);
   const [chartHeight, setChartHeight] = useState(100);
-  const [chartData, setChartData] = useState<TestCommitHistoryChartData[]>();
+  const [chartData, setChartData] = useState<TestCommitHistoryChartData>();
 
   /*
   Throttle the resize of the svg (refresh rate) to every 1s to not overwhelm the renderer,
@@ -63,7 +58,7 @@ function Chart(props: {
     { noLeading: false, noTrailing: false },
   );
 
-  //Resize Observer -> necessary for dynamically refreshing d3 chart
+  // Resize Observer -> necessary for dynamically refreshing d3 chart
   useEffect(() => {
     if (!props.chartContainerRef.current) return;
     const resizeObserver = new ResizeObserver(() => {
@@ -73,23 +68,25 @@ function Chart(props: {
     return () => resizeObserver.disconnect();
   }, [props.chartContainerRef, chartHeight, chartWidth, throttledResize]);
 
-  // Set chartData when commits, files, or connection change
+  // Set chartData when data changes
   useEffect(() => {
-    const chartData: TestCommitHistoryChartData[] = createBarCharData(
+    const chartData: TestCommitHistoryChartData = createBarCharData(
       commits,
       files,
       commitsFilesConnections,
-      props.parameters.parametersGeneral.excludeMergeCommits,
+      props.parameters,
+      props.authorList,
+      props.fileList,
     );
     setChartData(chartData);
-  }, [commits, files, commitsFilesConnections, props.parameters.parametersGeneral.excludeMergeCommits]);
+  }, [commits, files, commitsFilesConnections, props.parameters, props.authorList, props.fileList]);
 
-  //Set Global state when parameters change. This will also conclude in a refresh of the data.
+  // Set DateRange when parameters change
   useEffect(() => {
     dispatch(setDateRange(props.parameters.parametersDateRange));
-  }, [dispatch, props.parameters]);
+  }, [dispatch, props.parameters.parametersDateRange]);
 
-  //Trigger Refresh when dataConnection changes
+  // Trigger Refresh when dataConnection changes
   useEffect(() => {
     dispatch({
       type: 'REFRESH',
@@ -105,7 +102,13 @@ function Chart(props: {
         </div>
       )}
       {dataState === DataState.COMPLETE && (
-        <BarChart data={chartData} width={chartWidth} height={chartHeight} dateRange={props.parameters.parametersDateRange} />
+        <StackedBarChart
+          data={chartData}
+          width={chartWidth}
+          height={chartHeight}
+          dateRange={props.parameters.parametersDateRange}
+          authorList={props.authorList}
+        />
       )}
     </div>
   );

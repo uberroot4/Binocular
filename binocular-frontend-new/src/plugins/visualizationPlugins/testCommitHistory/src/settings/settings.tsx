@@ -1,4 +1,4 @@
-export interface SettingsType {}
+export interface TestCommitHistorySettings {}
 
 function Settings() {
   return null;
