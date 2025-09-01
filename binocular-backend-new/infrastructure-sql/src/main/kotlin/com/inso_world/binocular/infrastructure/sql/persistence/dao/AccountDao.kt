@@ -1,23 +1,31 @@
-// package com.inso_world.binocular.infrastructure.sql.persistence.dao
-//
-// import com.inso_world.binocular.core.persistence.dao.interfaces.IAccountDao
-// import com.inso_world.binocular.core.persistence.model.Page
-// import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEntity
-// import com.inso_world.binocular.infrastructure.sql.persistence.mapper.AccountMapper
-// import com.inso_world.binocular.model.Account
-// import jakarta.persistence.EntityManager
-// import jakarta.persistence.PersistenceContext
-// import org.springframework.beans.factory.annotation.Autowired
-// import org.springframework.context.annotation.Profile
-// import org.springframework.data.domain.Pageable
-// import org.springframework.stereotype.Repository
-// import org.springframework.transaction.annotation.Transactional
-//
+ package com.inso_world.binocular.infrastructure.sql.persistence.dao
+
+ import com.inso_world.binocular.infrastructure.sql.persistence.dao.interfaces.IAccountDao
+ import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEntity
+ import com.inso_world.binocular.infrastructure.sql.persistence.repository.AccountRepository
+ import org.springframework.beans.factory.annotation.Autowired
+ import org.springframework.stereotype.Repository
+
+ @Repository
+ internal class AccountDao(
+     @Autowired
+     private val repo: AccountRepository,
+ ) : SqlDao<AccountEntity, Long>(),
+     IAccountDao {
+         init {
+             this.setClazz(AccountEntity::class.java)
+             this.setRepository(repo)
+         }
+
+
+     }
+
+
 // @Repository
 // @Transactional
 // class AccountDao(
 //    @Autowired private val accountMapper: AccountMapper,
-// ) : IAccountDao {
+// ) {
 //    @PersistenceContext
 //    private lateinit var entityManager: EntityManager
 //

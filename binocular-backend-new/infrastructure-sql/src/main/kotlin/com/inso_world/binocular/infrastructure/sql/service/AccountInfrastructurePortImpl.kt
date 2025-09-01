@@ -3,8 +3,8 @@ package com.inso_world.binocular.infrastructure.sql.service
 import com.inso_world.binocular.core.persistence.model.Page
 import com.inso_world.binocular.core.service.AccountInfrastructurePort
 import com.inso_world.binocular.infrastructure.sql.mapper.AccountMapper
+import com.inso_world.binocular.infrastructure.sql.persistence.dao.AccountDao
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEntity
-import com.inso_world.binocular.infrastructure.sql.persistence.repository.AccountRepository
 import com.inso_world.binocular.model.Account
 import com.inso_world.binocular.model.Issue
 import com.inso_world.binocular.model.MergeRequest
@@ -21,7 +21,7 @@ import org.springframework.validation.annotation.Validated
 @Validated
  internal class AccountInfrastructurePortImpl
 @Autowired constructor(
-    @Autowired val accountRepository: AccountRepository,
+    @Autowired val accountDao: AccountDao,
     @Autowired val accountMapper: AccountMapper
 ) : AbstractInfrastructurePort<Account, AccountEntity, Long>(Long::class),
     AccountInfrastructurePort {
@@ -55,7 +55,7 @@ import org.springframework.validation.annotation.Validated
         logger.trace("Save all accounts (${values.size})")
 
         val entities = values.map { accountMapper.toEntity(it) }
-        val savedEntities = accountRepository.saveAll(entities)
+        val savedEntities = accountDao.saveAll(entities)
         return accountMapper.toDomainList(savedEntities)
     }
 
