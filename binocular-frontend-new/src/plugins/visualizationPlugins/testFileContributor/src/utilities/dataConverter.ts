@@ -41,6 +41,7 @@ export function createPieChartData(
   // Filter out commits that are merge commits if the flag is set
   if (parameters.parametersGeneral.excludeMergeCommits) {
     commits = commits.filter((commit: DataPluginCommit) => commit.parents.length <= 1);
+    if (commits.length === 0) return []; // Early return if no commits are available after filtering
   }
 
   const dataMap: Map<string, { added: number; deleted: number }> = new Map();
@@ -74,7 +75,7 @@ export function createPieChartData(
     if (selectedAuthors.some((author: AuthorType) => author.user._id === key)) {
       const user: DataPluginUser | undefined = users.find((user: DataPluginUser) => user._id === key);
       result.push(<TestFileContributorChartData>{
-        color: authorList.find((author) => author.user._id === key)?.color.main || '#545454',
+        color: authorList.find((author: AuthorType) => author.user._id === key)?.color.main || '#545454',
         name: user?.gitSignature ?? 'Unknown User',
         value: {
           added: value.added,
@@ -98,6 +99,15 @@ export function createPieChartData(
     if (parentEntry) {
       parentEntry.value.added += value.added;
       parentEntry.value.deleted += value.deleted;
+    } else {
+      result.push(<TestFileContributorChartData>{
+        color: parentAuthor.color.main || '#545454',
+        name: parent?.gitSignature ?? 'Unknown User',
+        value: {
+          added: value.added,
+          deleted: value.deleted,
+        },
+      });
     }
   });
   return result;
