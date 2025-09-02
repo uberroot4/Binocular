@@ -91,4 +91,12 @@ import org.springframework.validation.annotation.Validated
     override fun findNotesByAccountId(accountId: String): List<Note> {
         TODO("Not yet implemented")
     }
+
+    override fun findExistingGid(gids: List<String>): Iterable<Account> {
+        return this.accountDao
+            .findExistingGid(gids)
+            .map {
+                this.accountMapper.toDomain(it)
+            }
+    }
 }

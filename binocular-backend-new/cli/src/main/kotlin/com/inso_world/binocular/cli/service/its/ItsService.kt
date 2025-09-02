@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono
  * Service for indexing ITS data.
  */
 @Service
-class ItsService (
+class ItsService(
     private val gitHubService: GitHubService,
     private val accountService: AccountService
 ) {
@@ -26,8 +26,18 @@ class ItsService (
             .map { users ->
                 users.map { it.toDomain() }
             }.flatMap { accounts ->
-                logger.debug("Saving ${accounts.size} accounts")
-                accountService.saveAll(accounts)
+                val (existing, missing) = accountService.checkExisting(accounts)
+                logger.debug("Found ${existing.size} existing accounts, ${missing.size} new accounts to be added")
+
+                if (missing.isNotEmpty()) {
+                    // new accounts to save
+                    logger.debug("Saving ${missing.size} new accounts")
+                    accountService.saveAll(missing as List<Account>).map { saved ->
+                        saved + existing
+                    }
+                } else {
+                    Mono.just(existing.toList())
+                }
             }
     }
 }

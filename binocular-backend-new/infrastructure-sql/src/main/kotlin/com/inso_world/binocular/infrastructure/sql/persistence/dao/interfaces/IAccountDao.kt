@@ -4,4 +4,5 @@ import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEnt
 
 internal interface IAccountDao : IDao<AccountEntity, Long> {
 
+    fun findExistingGid(gids: List<String>): Iterable<AccountEntity>
 }

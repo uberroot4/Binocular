@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
+import java.util.stream.Collectors
 
 @Service
 class AccountService (
@@ -19,5 +20,21 @@ class AccountService (
         return Mono.fromCallable {
             accountInfrastructurePort.saveAll(accounts).toList()
         }.subscribeOn(Schedulers.boundedElastic())
+    }
+
+    fun checkExisting(minedAccounts: List<Account>):
+    Pair<Collection<Account>, Collection<Account>> {
+        val allGids: List<String> =
+            minedAccounts
+                .stream()
+                .map{ m -> m.gid}
+                .collect(Collectors.toList())
+
+        val existingAccounts: Iterable<Account> = accountInfrastructurePort.findExistingGid(allGids)
+
+        val gidsToRemove = existingAccounts.map { it.gid }
+        val missingGids = minedAccounts.filterNot { it.gid in gidsToRemove }
+
+        return Pair(existingAccounts.toList(), missingGids.toList())
     }
 }

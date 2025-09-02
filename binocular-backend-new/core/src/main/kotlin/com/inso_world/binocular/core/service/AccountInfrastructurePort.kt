@@ -4,6 +4,7 @@ import com.inso_world.binocular.model.Account
 import com.inso_world.binocular.model.Issue
 import com.inso_world.binocular.model.MergeRequest
 import com.inso_world.binocular.model.Note
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * Interface for AccountService.
@@ -33,4 +34,15 @@ interface AccountInfrastructurePort : BinocularInfrastructurePort<Account> {
      * @return List of notes associated with the account
      */
     fun findNotesByAccountId(accountId: String): List<Note>
+
+    /**
+     * Find existing GitHub Accounts via gid.
+     *
+     * @param gids The list of GitHub account IDs
+     * @return the Accounts associated with the IDs
+     */
+    @Transactional(readOnly = true)
+    fun findExistingGid(
+        gids: List<String>,
+    ): Iterable<Account>
 }

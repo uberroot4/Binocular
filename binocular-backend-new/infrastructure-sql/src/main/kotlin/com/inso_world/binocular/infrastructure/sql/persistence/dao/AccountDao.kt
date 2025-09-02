@@ -1,24 +1,36 @@
- package com.inso_world.binocular.infrastructure.sql.persistence.dao
+package com.inso_world.binocular.infrastructure.sql.persistence.dao
 
- import com.inso_world.binocular.infrastructure.sql.persistence.dao.interfaces.IAccountDao
- import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEntity
- import com.inso_world.binocular.infrastructure.sql.persistence.repository.AccountRepository
- import org.springframework.beans.factory.annotation.Autowired
- import org.springframework.stereotype.Repository
+import com.inso_world.binocular.infrastructure.sql.persistence.dao.interfaces.IAccountDao
+import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEntity
+import com.inso_world.binocular.infrastructure.sql.persistence.repository.AccountRepository
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.jpa.domain.Specification
+import org.springframework.stereotype.Repository
 
- @Repository
- internal class AccountDao(
-     @Autowired
-     private val repo: AccountRepository,
- ) : SqlDao<AccountEntity, Long>(),
-     IAccountDao {
-         init {
-             this.setClazz(AccountEntity::class.java)
-             this.setRepository(repo)
-         }
+@Repository
+internal class AccountDao(
+    @Autowired
+    private val repo: AccountRepository,
+) : SqlDao<AccountEntity, Long>(),
+    IAccountDao {
+    init {
+        this.setClazz(AccountEntity::class.java)
+        this.setRepository(repo)
+    }
+
+    private object AccountEntitySpecification {
+        fun hasGidIn(gids: List<String>): Specification<AccountEntity> =
+            Specification { root, _, cb ->
+                root.get<String>("gid").`in`(gids)
+            }
+    }
+
+    override fun findExistingGid(gids: List<String>): Iterable<AccountEntity> {
+        return this.repo.findAll(AccountEntitySpecification.hasGidIn(gids))
+    }
 
 
-     }
+}
 
 
 // @Repository
