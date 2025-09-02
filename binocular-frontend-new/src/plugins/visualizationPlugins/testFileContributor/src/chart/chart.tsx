@@ -68,7 +68,7 @@ function Chart<SettingsType extends TestFileContributorSettings, DataType>(props
     { noLeading: false, noTrailing: false },
   );
 
-  //Resize Observer -> necessary for dynamically refreshing d3 chart
+  // Resize Observer -> necessary for dynamically refreshing d3 chart
   useEffect(() => {
     if (!props.chartContainerRef.current) return;
     const resizeObserver = new ResizeObserver(() => {
@@ -78,7 +78,7 @@ function Chart<SettingsType extends TestFileContributorSettings, DataType>(props
     return () => resizeObserver.disconnect();
   }, [props.chartContainerRef, chartHeight, chartWidth, throttledResize]);
 
-  // Set chartData when commits, files, or connection change
+  // Set chartData when data changes
   useEffect(() => {
     const chartData: TestFileContributorChartData[] = createPieChartData(
       commits,
