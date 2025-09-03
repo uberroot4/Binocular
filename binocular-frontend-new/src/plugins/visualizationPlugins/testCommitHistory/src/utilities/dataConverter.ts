@@ -42,6 +42,7 @@ export function createBarCharData(
     sortedCommitsByDate = commits.filter((commit: DataPluginCommit) => commit.parents.length <= 1);
     if (sortedCommitsByDate.length === 0) return []; // Early return if no commits are available after filtering
   }
+  if (sortedCommitsByDate.length === 0) return []; // Early return if no commits are available after filtering
 
   const result: TestCommitHistoryChartData = [];
   sortedCommitsByDate.map((commit: DataPluginCommit) => {
