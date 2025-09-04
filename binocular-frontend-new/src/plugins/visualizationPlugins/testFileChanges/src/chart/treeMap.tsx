@@ -2,7 +2,7 @@ import { useState } from 'react';
 import * as d3 from 'd3';
 import { TreeMapData } from './chart.tsx';
 import { getMaxAmountOfChanges, getTextWidth, truncateTextToWidth } from '../utilities/utilities.ts';
-import { HierarchyNode, HierarchyRectangularNode, ScaleQuantize, TreemapLayout } from 'd3';
+import { HierarchyNode, HierarchyRectangularNode, InternMap, ScaleQuantize, TreemapLayout } from 'd3';
 
 const PADDING = 5;
 const PADDING_RECTANGLE = 3;
@@ -17,6 +17,7 @@ const colors: string[] = [
   '#0D47A1', // 80% - 100%
 ];
 const windowWidth: number = window.innerWidth;
+const groupLabelHeight: number = 20;
 
 type TreeMapProps = {
   width: number;
@@ -35,22 +36,48 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
     return <div>No data available</div>;
   }
 
+  // Create the hierarchy and treemap layout
   const hierarchy: HierarchyNode<TreeMapData> = d3.hierarchy(data).sum((d: TreeMapData) => d.fileSize);
   const maxValue: number = getMaxAmountOfChanges(data);
   const treeGenerator: TreemapLayout<TreeMapData> = d3
     .treemap<TreeMapData>()
-    .size([width, height - MARGIN.bottom])
-    .padding(1);
+    .size([width, height - MARGIN.bottom - groupLabelHeight])
+    .padding(2);
   const root: HierarchyRectangularNode<TreeMapData> = treeGenerator(hierarchy);
 
   // Create a color scale based on the maximum value
   const colorScale: ScaleQuantize<string> = d3.scaleQuantize<string>().domain([0, maxValue]).range(colors);
 
+  // Group shapes by their top-level directory to create borders
+  const groupedShapes: InternMap<string, HierarchyRectangularNode<TreeMapData>[]> = d3.group(
+    root.leaves(),
+    (leaf: HierarchyRectangularNode<TreeMapData>) => leaf.data.pathName.split('/')[0],
+  );
+  const groupBorders: { group: string; x: number; y: number; width: number; height: number }[] = Array.from(groupedShapes.entries()).map(
+    ([group, nodes]: [string, HierarchyRectangularNode<TreeMapData>[]]) => {
+      const x0: number = d3.min(nodes, (d: HierarchyRectangularNode<TreeMapData>) => d.x0)!;
+      const y0: number = d3.min(nodes, (d: HierarchyRectangularNode<TreeMapData>) => d.y0)!;
+      const x1: number = d3.max(nodes, (d: HierarchyRectangularNode<TreeMapData>) => d.x1)!;
+      const y1: number = d3.max(nodes, (d: HierarchyRectangularNode<TreeMapData>) => d.y1)!;
+
+      return {
+        group,
+        x: x0,
+        y: y0,
+        width: x1 - x0,
+        height: y1 - y0,
+      };
+    },
+  );
+
   // Create the rectangles and text for each leaf node
   const allShapes = root.leaves().map((leaf: HierarchyRectangularNode<TreeMapData>) => {
     const rectWidth: number = leaf.x1 - leaf.x0;
     const rectHeight: number = leaf.y1 - leaf.y0;
-    const amountOfChanges: number = leaf.data.changes.reduce((sum, change) => sum + change.amount, 0);
+    const amountOfChanges: number = leaf.data.changes.reduce(
+      (sum: number, change: { user: string; amount: number }) => sum + change.amount,
+      0,
+    );
     const availableWidth: number = rectWidth - PADDING_RECTANGLE * 2;
     const displayName: string = truncateTextToWidth(leaf.data.name, availableWidth);
 
@@ -90,7 +117,7 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
           {/* Rectangle for the leaf node */}
           <rect
             x={leaf.x0}
-            y={leaf.y0}
+            y={leaf.y0 + groupLabelHeight}
             width={rectWidth}
             height={rectHeight}
             fill={colorScale(amountOfChanges)}
@@ -100,7 +127,7 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
           {rectWidth > 10 + 2 * PADDING_RECTANGLE && rectHeight > 12 + 2 * PADDING_RECTANGLE && (
             <text
               x={leaf.x0 + PADDING_RECTANGLE}
-              y={leaf.y0 + PADDING_RECTANGLE}
+              y={leaf.y0 + PADDING_RECTANGLE + groupLabelHeight}
               fontSize={12}
               fontFamily={'sans-serif'}
               textAnchor="start"
@@ -113,13 +140,13 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
           {rectWidth > 10 + 2 * PADDING_RECTANGLE && rectHeight > 12 * 2 + 2 * PADDING_RECTANGLE && (
             <text
               x={leaf.x0 + PADDING_RECTANGLE}
-              y={leaf.y0 + 18}
+              y={leaf.y0 + 18 + groupLabelHeight}
               fontSize={12}
               textAnchor="start"
               alignmentBaseline="hanging"
               fill="black"
               className="font-light">
-              {leaf.data.changes.reduce((sum, change) => sum + change.amount, 0)}
+              {leaf.data.changes.reduce((sum: number, change: { user: string; amount: number }) => sum + change.amount, 0)}
             </text>
           )}
         </g>
@@ -129,7 +156,6 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
 
   return (
     <div>
-      {/* SVG Container */}
       <svg width={width} height={height}>
         {/* Legend */}
         <g>
@@ -172,7 +198,48 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
           ))}
         </g>
         {allShapes}
+        <g className="group-borders">
+          {groupBorders.map((group: { group: string; x: number; y: number; width: number; height: number }, i: number) => (
+            <g key={'group' + i}>
+              {/* Group rectangle border */}
+              <rect
+                key={'group-border' + i}
+                x={group.x}
+                y={group.y}
+                width={group.width}
+                height={group.height + groupLabelHeight}
+                stroke="black"
+                fill="none"
+                strokeWidth={1}
+              />
+              {/* Group label */}
+              {group.width > 10 + 2 * PADDING_RECTANGLE && group.height + groupLabelHeight > 12 && (
+                <text
+                  key={'group-label' + i}
+                  x={group.x + PADDING}
+                  y={group.y + PADDING}
+                  fontSize={12}
+                  fontFamily={'sans-serif'}
+                  textAnchor="start"
+                  alignmentBaseline="hanging"
+                  fill="black">
+                  {`${truncateTextToWidth(group.group, group.width - 2 * PADDING_RECTANGLE)}`}
+                </text>
+              )}
+              {/* Bottom border line */}
+              <line
+                x1={group.x}
+                y1={group.y + groupLabelHeight}
+                x2={group.x + group.width}
+                y2={group.y + groupLabelHeight}
+                stroke="black"
+                strokeWidth={1}
+              />
+            </g>
+          ))}
+        </g>
       </svg>
+      {/* Tooltip for legend */}
       {tooltipLegend.visible && (
         <div
           style={{
@@ -192,6 +259,7 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
           {`≤ ${Math.round(tooltipLegend.amount)} changes`}
         </div>
       )}
+      {/* Tooltip for rectangles */}
       {tooltip.visible && (
         <div
           style={{
