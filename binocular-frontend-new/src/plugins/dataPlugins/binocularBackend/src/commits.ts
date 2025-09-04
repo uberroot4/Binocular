@@ -28,6 +28,7 @@ export default class Commits implements DataPluginCommits {
                   message
                   messageHeader
                   user {
+                    _id
                     id
                     gitSignature
                   }
