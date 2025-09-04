@@ -1,4 +1,4 @@
-export interface SettingsType {}
+export interface TestFileChangesSettings {}
 
 function Settings() {
   return null;

@@ -6,7 +6,7 @@ import { TreeMapData } from '../chart/chart.tsx';
  * @param chartContainerRef the reference to the chart container
  */
 export function getSVGData(chartContainerRef: RefObject<HTMLDivElement | undefined>): string {
-  const svgData = chartContainerRef.current?.children[0].outerHTML;
+  const svgData: string | undefined = chartContainerRef.current?.children[0].outerHTML;
   if (svgData === undefined) {
     return '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
   }
@@ -18,10 +18,15 @@ export function getSVGData(chartContainerRef: RefObject<HTMLDivElement | undefin
  * @param treeMapData the tree map data to analyze
  */
 export function getMaxAmountOfChanges(treeMapData: TreeMapData): number {
-  let maxAmountOfChanges = 0;
+  let maxAmountOfChanges: number = 0;
+  if (!treeMapData || treeMapData.children.length === 0) return maxAmountOfChanges;
   const traverse = (node: TreeMapData) => {
+    if (!node) return;
     if (node.type === 'leaf') {
-      maxAmountOfChanges = Math.max(maxAmountOfChanges, node.amountOfChanges);
+      maxAmountOfChanges = Math.max(
+        maxAmountOfChanges,
+        node.changes.reduce((sum: number, change: { user: string; amount: number }) => sum + change.amount, 0),
+      );
     } else if (node.children) {
       node.children.forEach(traverse);
     }
@@ -51,7 +56,7 @@ export function getTextWidth(text: string, font = '12px sans-serif') {
  */
 export function truncateTextToWidth(text: string, maxWidth: number, font = '12px sans-serif') {
   if (getTextWidth(text, font) <= maxWidth) return text;
-  let truncated = text;
+  let truncated: string = text;
   while (truncated.length > 0 && getTextWidth(truncated + '…', font) > maxWidth) {
     truncated = truncated.slice(0, -1);
   }
