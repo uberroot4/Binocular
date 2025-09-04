@@ -201,40 +201,40 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
         <g className="group-borders">
           {groupBorders.map((group: { group: string; x: number; y: number; width: number; height: number }, i: number) => (
             <g key={'group' + i}>
-              {/* Group rectangle border */}
-              <rect
-                key={'group-border' + i}
-                x={group.x}
-                y={group.y}
-                width={group.width}
-                height={group.height + groupLabelHeight}
-                stroke="black"
-                fill="none"
-                strokeWidth={1}
-              />
-              {/* Group label */}
               {group.width > 10 + 2 * PADDING_RECTANGLE && group.height + groupLabelHeight > 12 && (
-                <text
-                  key={'group-label' + i}
-                  x={group.x + PADDING}
-                  y={group.y + PADDING}
-                  fontSize={12}
-                  fontFamily={'sans-serif'}
-                  textAnchor="start"
-                  alignmentBaseline="hanging"
-                  fill="black">
-                  {`${truncateTextToWidth(group.group, group.width - 2 * PADDING_RECTANGLE)}`}
-                </text>
+                <>
+                  {/* Background box for label */}
+                  <rect
+                    x={group.x}
+                    y={group.y}
+                    width={group.width}
+                    height={groupLabelHeight}
+                    fill="rgba(0, 0, 0, 0.075"
+                    stroke="black" // Optional for border
+                    strokeWidth={1}
+                  />
+                  <rect
+                    x={group.x}
+                    y={group.y}
+                    width={group.width}
+                    height={group.height + groupLabelHeight}
+                    fill="none"
+                    stroke="black" // Optional for border
+                    strokeWidth={1}
+                  />
+                  {/* Label text */}
+                  <text
+                    x={group.x + PADDING}
+                    y={group.y + PADDING}
+                    fontSize={12}
+                    fontFamily="sans-serif"
+                    textAnchor="start"
+                    alignmentBaseline="hanging"
+                    fill="black">
+                    {truncateTextToWidth(group.group, group.width - 2 * PADDING_RECTANGLE)}
+                  </text>
+                </>
               )}
-              {/* Bottom border line */}
-              <line
-                x1={group.x}
-                y1={group.y + groupLabelHeight}
-                x2={group.x + group.width}
-                y2={group.y + groupLabelHeight}
-                stroke="black"
-                strokeWidth={1}
-              />
             </g>
           ))}
         </g>
