@@ -201,27 +201,29 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
         <g className="group-borders">
           {groupBorders.map((group: { group: string; x: number; y: number; width: number; height: number }, i: number) => (
             <g key={'group' + i}>
+              {/* Background box for label */}
+              <rect x={group.x} y={group.y} width={group.width} height={groupLabelHeight} fill="rgba(0, 0, 0, 0.075" />
+              {/* Border rectangle */}
+              <rect
+                x={group.x}
+                y={group.y}
+                width={group.width}
+                height={group.height + groupLabelHeight}
+                fill="none"
+                stroke="black"
+                strokeWidth={1}
+              />
+              {/* Line below label */}
+              <line
+                x1={group.x}
+                y1={group.y + groupLabelHeight}
+                x2={group.x + group.width}
+                y2={group.y + groupLabelHeight}
+                stroke="black"
+                strokeWidth={1}
+              />
               {group.width > 10 + 2 * PADDING_RECTANGLE && group.height + groupLabelHeight > 12 && (
                 <>
-                  {/* Background box for label */}
-                  <rect
-                    x={group.x}
-                    y={group.y}
-                    width={group.width}
-                    height={groupLabelHeight}
-                    fill="rgba(0, 0, 0, 0.075"
-                    stroke="black" // Optional for border
-                    strokeWidth={1}
-                  />
-                  <rect
-                    x={group.x}
-                    y={group.y}
-                    width={group.width}
-                    height={group.height + groupLabelHeight}
-                    fill="none"
-                    stroke="black" // Optional for border
-                    strokeWidth={1}
-                  />
                   {/* Label text */}
                   <text
                     x={group.x + PADDING}
