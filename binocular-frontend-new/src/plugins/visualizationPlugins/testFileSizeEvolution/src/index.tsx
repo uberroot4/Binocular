@@ -1,6 +1,6 @@
 import Chart from './chart/chart.tsx';
 import PreviewImage from '../assets/thumbnail.svg';
-import Settings, { SettingsType } from './settings/settings.tsx';
+import Settings, { TestFileSizeEvolutionSettings } from './settings/settings.tsx';
 import { VisualizationPlugin } from '../../../interfaces/visualizationPlugin.ts';
 import { getSVGData } from './utilities/utilities.ts';
 import Reducer from './reducer';
@@ -8,7 +8,7 @@ import Saga from './saga';
 import Help from './help/help.tsx';
 import { VisualizationPluginMetadataCategory } from '../../../interfaces/visualizationPluginInterfaces/visualizationPluginMetadata.ts';
 
-const TestFileSizeEvolution: VisualizationPlugin<SettingsType, null> = {
+const TestFileSizeEvolution: VisualizationPlugin<TestFileSizeEvolutionSettings, null> = {
   name: 'Test File Size Evolution',
   chartComponent: Chart,
   settingsComponent: Settings,

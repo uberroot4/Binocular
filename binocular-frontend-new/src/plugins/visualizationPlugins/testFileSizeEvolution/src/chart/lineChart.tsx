@@ -4,6 +4,7 @@ import { XAxis } from './XAxis.tsx';
 import { TestFileSizeEvolutionChartData } from './chart.tsx';
 import { YAxis } from './YAxis.tsx';
 import { cropData } from '../utilities/utilities.ts';
+import { Area, Line, ScaleLinear, ScaleTime } from 'd3';
 
 const MARGIN = { top: 30, right: 30, bottom: 40, left: 40 };
 
@@ -16,8 +17,8 @@ type LineChartProps = {
 
 export const LineChart = ({ width, height, dateRange, data }: LineChartProps) => {
   // Calculate the bounds for the chart area
-  const boundsWidth = width - MARGIN.right - MARGIN.left;
-  const boundsHeight = height - MARGIN.top - MARGIN.bottom;
+  const boundsWidth: number = width - MARGIN.right - MARGIN.left;
+  const boundsHeight: number = height - MARGIN.top - MARGIN.bottom;
 
   // States for handling brushing
   const [isBrushing, setIsBrushing] = useState(false);
@@ -29,19 +30,20 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
   const [domain, setDomain] = useState<[Date | undefined, Date | undefined]>(times);
 
   // If no data is provided, early return
-  if (!data) {
+  if (!data || data.length === 0) {
     return <div>No data available</div>;
   }
+  const croppedData: TestFileSizeEvolutionChartData[] = cropData(data, domain[0], domain[1]);
 
   // X scale
-  const xScale = d3
+  const xScale: ScaleTime<number, number> = d3
     .scaleTime()
     .domain([domain[0] ?? new Date(), domain[1] ?? new Date()])
     .range([0, boundsWidth]);
 
   // Y scale
-  const maxY = d3.max(data, (d) => d.amountOfTestFiles) ?? 0;
-  const yScale = d3
+  const maxY: number = d3.max(data, (d: TestFileSizeEvolutionChartData) => d.amountOfTestFiles) ?? 0;
+  const yScale: ScaleLinear<number, number> = d3
     .scaleLinear()
     .domain([0, Math.ceil(maxY || 0)])
     .range([boundsHeight, 0]);
@@ -49,19 +51,31 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
   const yTicks: number[] = yScale.ticks();
 
   // Build the area
-  const areaBuilder = d3
+  const areaBuilder: Area<TestFileSizeEvolutionChartData> = d3
     .area<TestFileSizeEvolutionChartData>()
-    .x((d) => xScale(new Date(d.time)))
-    .y1((d) => yScale(d.amountOfTestFiles))
-    .y0(yScale(0));
-  const areaPath = areaBuilder(cropData(data, domain[0], domain[1]));
+    .x((d: TestFileSizeEvolutionChartData) => xScale(new Date(d.time)))
+    .y1((d: TestFileSizeEvolutionChartData) => yScale(d.amountOfTestFiles))
+    .y0(yScale(0))
+    .curve(d3.curveStep);
+  const areaPath: string | null = areaBuilder(croppedData);
+
+  // If no arePath was created
+  if (!areaPath) {
+    return <div>No data available</div>;
+  }
 
   // Build the line
-  const lineBuilder = d3
+  const lineBuilder: Line<TestFileSizeEvolutionChartData> = d3
     .line<TestFileSizeEvolutionChartData>()
-    .x((d) => xScale(new Date(d.time)))
-    .y((d) => yScale(d.amountOfTestFiles));
-  const linePath = lineBuilder(cropData(data, domain[0], domain[1]));
+    .x((d: TestFileSizeEvolutionChartData) => xScale(new Date(d.time)))
+    .y((d: TestFileSizeEvolutionChartData) => yScale(d.amountOfTestFiles))
+    .curve(d3.curveStep);
+  const linePath: string | null = lineBuilder(croppedData);
+
+  // If no arePath was created
+  if (!linePath) {
+    return <div>No data available</div>;
+  }
 
   // Mouse handlers for custom brushing
   const handleMouseDown = (event: React.MouseEvent<SVGRectElement>) => {
@@ -85,72 +99,9 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
     setBrushEnd(null);
   };
 
-  // If no line or area path is generated, return a simple chart with axes
-  if (!linePath || !areaPath) {
-    return (
-      <div style={{ position: 'relative' }}>
-        <svg width={width} height={height}>
-          <g transform={`translate(${[MARGIN.left, boundsHeight + MARGIN.top].join(',')})`}>
-            <XAxis xScale={xScale} />
-          </g>
-          <g transform={`translate(${[MARGIN.left, MARGIN.top].join(',')})`}>
-            {/* Horizontal grid lines */}
-            {yTicks.map((tick, i) => {
-              const y = yScale(tick);
-              return <>{<line key={i} x1={0} x2={boundsWidth} y1={y} y2={y} stroke="#ccc" strokeDasharray="3,3" />}</>;
-            })}
-            <YAxis yScale={yScale} />
-          </g>
-          {/* Brushing overlay */}
-          <rect
-            x={MARGIN.left}
-            y={MARGIN.top}
-            width={boundsWidth}
-            height={boundsHeight}
-            fill="transparent"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-          />
-          {isBrushing && brushStart !== null && brushEnd !== null && (
-            <rect
-              x={Math.min(brushStart, brushEnd)}
-              y={MARGIN.top}
-              width={Math.abs(brushEnd - brushStart)}
-              height={boundsHeight}
-              fill="rgba(154, 111, 176, 0.3)"
-              pointerEvents={'none'}
-            />
-          )}
-        </svg>
-      </div>
-    );
-  }
-
   return (
     <div style={{ position: 'relative' }}>
       <svg width={width} height={height}>
-        <g width={boundsWidth} height={boundsHeight} transform={`translate(${[MARGIN.left, MARGIN.top].join(',')})`}>
-          <defs>
-            <linearGradient id="fade-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#9a6fb0" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#9a6fb0" stopOpacity="0.4" />
-            </linearGradient>
-          </defs>
-          {/* Horizontal grid lines */}
-          {yTicks.map((tick, i) => {
-            const y = yScale(tick);
-            return <>{<line key={i} x1={0} x2={boundsWidth} y1={y} y2={y} stroke="#ccc" strokeDasharray="3,3" />}</>;
-          })}
-          <path d={areaPath} opacity={1} stroke="none" fill="url(#fade-area)" fillOpacity={0.4} />
-          <path d={linePath} opacity={1} stroke="#9a6fb0" fill="none" strokeWidth={2} />
-        </g>
-        <g transform={`translate(${[MARGIN.left, boundsHeight + MARGIN.top].join(',')})`}>
-          <XAxis xScale={xScale} />
-        </g>
-        <g transform={`translate(${[MARGIN.left, MARGIN.top].join(',')})`}>
-          <YAxis yScale={yScale} />
-        </g>
         {/* Brushing overlay */}
         <rect
           x={MARGIN.left}
@@ -168,10 +119,31 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
             y={MARGIN.top}
             width={Math.abs(brushEnd - brushStart)}
             height={boundsHeight}
-            fill="rgba(154, 111, 176, 0.3)"
+            fill="rgba(66, 165, 245, 0.3)"
             pointerEvents={'none'}
           />
         )}
+        <g width={boundsWidth} height={boundsHeight} transform={`translate(${[MARGIN.left, MARGIN.top].join(',')})`}>
+          <defs>
+            <linearGradient id="fade-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#42A5F5" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#42A5F5" stopOpacity="0.4" />
+            </linearGradient>
+          </defs>
+          {/* Horizontal grid lines */}
+          {yTicks.map((tick, i) => {
+            const y: number = yScale(tick);
+            return <>{<line key={i} x1={0} x2={boundsWidth} y1={y} y2={y} stroke="#ccc" strokeDasharray="3,3" />}</>;
+          })}
+          <path d={areaPath} opacity={1} stroke="none" fill="url(#fade-area)" fillOpacity={0.4} />
+          <path d={linePath || undefined} stroke="#42A5F5" fill="none" strokeWidth={2} pointerEvents="none" />
+        </g>
+        <g transform={`translate(${[MARGIN.left, boundsHeight + MARGIN.top].join(',')})`}>
+          <XAxis xScale={xScale} />
+        </g>
+        <g transform={`translate(${[MARGIN.left, MARGIN.top].join(',')})`}>
+          <YAxis yScale={yScale} />
+        </g>
       </svg>
     </div>
   );
