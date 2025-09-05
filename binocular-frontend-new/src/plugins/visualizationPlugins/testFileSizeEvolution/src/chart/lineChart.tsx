@@ -4,7 +4,7 @@ import { XAxis } from './XAxis.tsx';
 import { TestFileSizeEvolutionChartData } from './chart.tsx';
 import { YAxis } from './YAxis.tsx';
 import { cropData } from '../utilities/utilities.ts';
-import { Area, Line, ScaleLinear, ScaleTime } from 'd3';
+import { Area, Bisector, Line, ScaleLinear, ScaleTime } from 'd3';
 
 const MARGIN = { top: 30, right: 30, bottom: 40, left: 40 };
 
@@ -25,6 +25,9 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
   const [brushStart, setBrushStart] = useState<number | null>(null);
   const [brushEnd, setBrushEnd] = useState<number | null>(null);
 
+  const [isHovering, setIsHovering] = useState(false);
+  const [hover, setHover] = useState<{ x: number; y: number; d: TestFileSizeEvolutionChartData } | null>(null);
+
   // Initialize the time range for the x-axis
   const times: [Date, Date] = [new Date(dateRange.from), new Date(dateRange.to)];
   const [domain, setDomain] = useState<[Date | undefined, Date | undefined]>(times);
@@ -34,6 +37,12 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
     return <div>No data available</div>;
   }
   const croppedData: TestFileSizeEvolutionChartData[] = cropData(data, domain[0], domain[1]);
+
+  const bisector: Bisector<TestFileSizeEvolutionChartData, number> = d3.bisector<TestFileSizeEvolutionChartData, number>(
+    (d: TestFileSizeEvolutionChartData) => new Date(d.time).getTime(),
+  );
+  // bind fixes the “unbound-method” warning
+  const bisectCenter = bisector.center.bind(bisector) as (arr: TestFileSizeEvolutionChartData[], x: number) => number;
 
   // X scale
   const xScale: ScaleTime<number, number> = d3
@@ -56,7 +65,7 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
     .x((d: TestFileSizeEvolutionChartData) => xScale(new Date(d.time)))
     .y1((d: TestFileSizeEvolutionChartData) => yScale(d.amountOfTestFiles))
     .y0(yScale(0))
-    .curve(d3.curveStep);
+    .curve(d3.curveStepAfter);
   const areaPath: string | null = areaBuilder(croppedData);
 
   // If no arePath was created
@@ -69,7 +78,7 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
     .line<TestFileSizeEvolutionChartData>()
     .x((d: TestFileSizeEvolutionChartData) => xScale(new Date(d.time)))
     .y((d: TestFileSizeEvolutionChartData) => yScale(d.amountOfTestFiles))
-    .curve(d3.curveStep);
+    .curve(d3.curveStepAfter);
   const linePath: string | null = lineBuilder(croppedData);
 
   // If no arePath was created
@@ -99,6 +108,26 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
     setBrushEnd(null);
   };
 
+  const handleHoverMove = (event: React.MouseEvent<SVGGElement>) => {
+    if (isBrushing) return; // do not update hover while brushing
+    const localX = event.nativeEvent.offsetX - MARGIN.left;
+    const clampedX = Math.max(0, Math.min(boundsWidth, localX));
+
+    setIsHovering(true);
+    if (croppedData.length > 0) {
+      const hoveredDate = xScale.invert(clampedX);
+      const i = bisectCenter(croppedData, hoveredDate.getTime());
+      const d = croppedData[Math.max(0, Math.min(croppedData.length - 1, i))];
+      const hx = xScale(new Date(d.time));
+      const hy = yScale(d.amountOfTestFiles);
+      setHover({ x: hx, y: hy, d });
+    }
+  };
+  const handleHoverLeave = () => {
+    setIsHovering(false);
+    setHover(null);
+  };
+
   return (
     <div style={{ position: 'relative' }}>
       <svg width={width} height={height}>
@@ -123,7 +152,12 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
             pointerEvents={'none'}
           />
         )}
-        <g width={boundsWidth} height={boundsHeight} transform={`translate(${[MARGIN.left, MARGIN.top].join(',')})`}>
+        <g
+          width={boundsWidth}
+          height={boundsHeight}
+          transform={`translate(${[MARGIN.left, MARGIN.top].join(',')})`}
+          onMouseMove={handleHoverMove}
+          onMouseLeave={handleHoverLeave}>
           <defs>
             <linearGradient id="fade-area" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#42A5F5" stopOpacity="0.8" />
@@ -137,6 +171,23 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
           })}
           <path d={areaPath} opacity={1} stroke="none" fill="url(#fade-area)" fillOpacity={0.4} />
           <path d={linePath || undefined} stroke="#42A5F5" fill="none" strokeWidth={2} pointerEvents="none" />
+          {isHovering && hover && (
+            <g pointerEvents="none">
+              <line x1={hover.x} x2={hover.x} y1={0} y2={boundsHeight} stroke="#90CAF9" strokeDasharray="4,4" />
+              <circle cx={hover.x} cy={hover.y} r={4} fill="#1976D2" stroke="white" strokeWidth={1.5} />
+              {/* Tooltip value above the circle */}
+              <text
+                x={hover.x}
+                y={hover.y - 10 < 12 ? 12 : hover.y - 10}
+                textAnchor="middle"
+                fontSize={12}
+                stroke="white"
+                strokeWidth={3}
+                paintOrder="stroke">
+                {hover.d.amountOfTestFiles}
+              </text>
+            </g>
+          )}
         </g>
         <g transform={`translate(${[MARGIN.left, boundsHeight + MARGIN.top].join(',')})`}>
           <XAxis xScale={xScale} />
