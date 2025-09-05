@@ -15,7 +15,7 @@ function Help() {
       <h3>Interaction</h3>
       <p>
         Hover over a rectangle to see the contributor&#39;s name and the number of commits they made to test files. Zoom in on time range by
-        draging and dopping the mouse along the x-axis.
+        dragging and dropping the mouse along the x-axis.
       </p>
       <h3>Settings</h3>
       <p>For this visualization plugin there are no additional settings available.</p>
