@@ -165,9 +165,9 @@ export const LineChart = ({ width, height, dateRange, data }: LineChartProps) =>
             </linearGradient>
           </defs>
           {/* Horizontal grid lines */}
-          {yTicks.map((tick, i) => {
+          {yTicks.map((tick: number) => {
             const y: number = yScale(tick);
-            return <>{<line key={i} x1={0} x2={boundsWidth} y1={y} y2={y} stroke="#ccc" strokeDasharray="3,3" />}</>;
+            return <line key={`file-size-y-grid-${tick}`} x1={0} x2={boundsWidth} y1={y} y2={y} stroke="#ccc" strokeDasharray="3,3" />;
           })}
           <path d={areaPath} opacity={1} stroke="none" fill="url(#fade-area)" fillOpacity={0.4} />
           <path d={linePath || undefined} stroke="#42A5F5" fill="none" strokeWidth={2} pointerEvents="none" />
