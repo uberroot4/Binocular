@@ -1,26 +1,19 @@
-import { RefObject, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { throttle } from 'throttle-debounce';
 import { SunburstChart } from './sunburstChart.tsx';
-import { DataPlugin } from '../../../../interfaces/dataPlugin.ts';
-import { ParametersType } from '../../../../../types/parameters/parametersType.ts';
-import { Store } from '@reduxjs/toolkit';
-import { SettingsType } from '../settings/settings.tsx';
+import { JacocoSettings } from '../settings/settings.tsx';
 import { useDispatch, useSelector } from 'react-redux';
-import { setDateRange, setSelectedReport } from '../reducer';
+import { DataState, setDateRange } from '../reducer';
 import { formatDate } from '../utilities/utilities.ts';
-import { convertJacocoReportDataToSunburstChartData } from '../utilities/dataConverter.ts';
+import { createSunburstData } from '../utilities/dataConverter.ts';
+import { VisualizationPluginProperties } from '../../../../interfaces/visualizationPluginInterfaces/visualizationPluginProperties.ts';
+import { DataPluginJacocoReport } from '../../../../interfaces/dataPluginInterfaces/dataPluginArtifacts.ts';
 
-export interface Counter {
-  missed?: number;
-  covered?: number;
-}
-
-export interface Counters {
-  INSTRUCTION?: Counter;
-  LINE?: Counter;
-  COMPLEXITY?: Counter;
-  METHOD?: Counter;
-  CLASS?: Counter;
+export type Counters = Record<Metric, MetricCount>;
+export type Metric = 'INSTRUCTION' | 'LINE' | 'COMPLEXITY' | 'METHOD';
+export interface MetricCount {
+  covered: number;
+  missed: number;
 }
 
 export interface SunburstData {
@@ -29,33 +22,25 @@ export interface SunburstData {
   children?: SunburstData[];
 }
 
-function Chart(props: {
-  settings: SettingsType;
-  dataConnection: DataPlugin;
-  parameters: ParametersType;
-  chartContainerRef: RefObject<HTMLDivElement>;
-  store: Store;
-}) {
-  /*
-   * Creating Dispatch and Root State for interaction with the reducer State
-   */
+function Chart<SettingsType extends JacocoSettings, DataType>(props: VisualizationPluginProperties<SettingsType, DataType>) {
+  // * -----------------------------
+  // * Creating Dispatch and Root State for interaction with the reducer State
+  // * -----------------------------
   type RootState = ReturnType<typeof props.store.getState>;
   type AppDispatch = typeof props.store.dispatch;
   const useAppDispatch = () => useDispatch<AppDispatch>();
   const dispatch: AppDispatch = useAppDispatch();
-  /*
-   * -----------------------------
-   */
-  // Redux Global State
-  const jacocoReportData = useSelector((state: RootState) => state.plugin.jacocoReportData);
-  const selectedReport = useSelector((state: RootState) => state.plugin.selectedReport);
-  const isLoading = useSelector((state: RootState) => state.plugin.isLoading);
-  const error = useSelector((state: RootState) => state.plugin.error);
-
-  // React Component State
+  // * -----------------------------
+  // * Redux Global State
+  // * -----------------------------
+  const jacocoReportData: DataPluginJacocoReport[] = useSelector((state: RootState) => state.plugin.jacocoReportData);
+  const dataState: DataState = useSelector((state: RootState) => state.plugin.dataState);
+  // * -----------------------------
+  // * React Component State
+  // * -----------------------------
   const [chartWidth, setChartWidth] = useState(100);
   const [chartHeight, setChartHeight] = useState(100);
-  const [chartData, setChartData] = useState<SunburstData>({ name: '', children: [] });
+  const [chartData, setChartData] = useState<SunburstData>({ name: '', counters: [], children: [] });
 
   /*
   Throttle the resize of the svg (refresh rate) to every 1s to not overwhelm the renderer,
@@ -83,57 +68,41 @@ function Chart(props: {
     });
     resizeObserver.observe(props.chartContainerRef.current);
     return () => resizeObserver.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.chartContainerRef, chartHeight, chartWidth]);
+  }, [props.chartContainerRef, chartHeight, chartWidth, throttledResize]);
 
-  // Convert Jacoco Report Data to Sunburst Data when Jacoco Report Data changes
+  // Set chartData when data changes
   useEffect(() => {
-    let chartData: SunburstData;
-    if (selectedReport === 'first') {
-      chartData = convertJacocoReportDataToSunburstChartData(jacocoReportData[1]);
-    } else {
-      chartData = convertJacocoReportDataToSunburstChartData(jacocoReportData[0]);
-    }
+    const chartData: SunburstData = createSunburstData(jacocoReportData, props.settings.selectedReport);
     setChartData(chartData);
-  }, [jacocoReportData, props.parameters]);
+  }, [jacocoReportData, props.settings.selectedReport]);
 
-  // Set Global state when parameters change. This will also conclude in a refresh of the data.
+  // Set DateRange when parameters change
   useEffect(() => {
     dispatch(setDateRange(props.parameters.parametersDateRange));
-    dispatch(setSelectedReport(props.settings.selectedReport));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.parameters]);
+  }, [dispatch, props.parameters.parametersDateRange]);
 
-  // Trigger Refresh when dataConnection changes (e.g., when the user changes the database from binocular to another)
+  // Trigger Refresh when dataConnection changes
   useEffect(() => {
     dispatch({
       type: 'REFRESH',
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.dataConnection]);
+  }, [dispatch, props.dataConnection]);
 
   return (
     <>
-      <div className={'w-full h-full'} ref={props.chartContainerRef}>
-        <span
-          className="w-full h-full"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            pointerEvents: 'none',
-            zIndex: 1000,
-          }}>
-          {!isLoading && !error && jacocoReportData && (
+      <div className={'w-full h-full flex justify-center items-center'} ref={props.chartContainerRef}>
+        {(dataState === DataState.EMPTY || !jacocoReportData) && <div>No data available</div>}
+        {dataState === DataState.FETCHING && (
+          <div>
+            <span className="loading loading-spinner loading-lg text-accent"></span>
+          </div>
+        )}
+        {dataState === DataState.COMPLETE && (
             <div>
               Report from:{' '}
               {formatDate(props.settings.selectedReport === 'first' ? jacocoReportData[1].created_at : jacocoReportData[0].created_at)}
             </div>
-          )}
-          {isLoading && <div>Loading data...</div>}
-          {error && <div>Error: {error}</div>}
-        </span>
-        {!isLoading && !error && <SunburstChart width={chartWidth} height={chartHeight} data={chartData} />}
+          ) && <SunburstChart width={chartWidth} height={chartHeight} data={chartData} />}
       </div>
     </>
   );

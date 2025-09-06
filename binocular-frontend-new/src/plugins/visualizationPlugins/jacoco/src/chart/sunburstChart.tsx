@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
-import { useEffect, useRef, useState } from 'react';
-import { HierarchyRectangularNode } from 'd3';
-import { SunburstData } from './chart.tsx';
+import { MutableRefObject, useEffect, useRef, useState } from 'react';
+import { Arc, HierarchyNode, HierarchyRectangularNode, ScaleOrdinal } from 'd3';
+import { Counters, Metric, SunburstData } from './chart.tsx';
 import ArrowBack from '../../assets/arrow-left-long.svg';
 
 type SunburstChartProps = {
@@ -10,22 +10,29 @@ type SunburstChartProps = {
   data: SunburstData;
 };
 
+const BLUE_PALETTE: string[] = ['#0D47A1', '#1976D2', '#42A5F5', '#90CAF9', '#E3F2FD'];
+const METRICS: Metric[] = ['INSTRUCTION', 'LINE', 'COMPLEXITY', 'METHOD'];
+
+interface ExtendedHierarchyNode extends d3.HierarchyRectangularNode<SunburstData> {
+  current?: d3.HierarchyRectangularNode<SunburstData>;
+  target?: { x0: number; y0: number; x1: number; y1: number };
+}
+
 export const SunburstChart = ({ width, height, data }: SunburstChartProps) => {
-  const d3Container = useRef<SVGSVGElement | null>(null);
+  const d3Container: MutableRefObject<SVGSVGElement | null> = useRef<SVGSVGElement | null>(null);
   const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
   const [tableData, setTableData] = useState<{ name: string; covered: number; missed: number }[]>([]);
 
   useEffect(() => {
+    if (!data || !data.children || data.children.length === 0) return;
     if (d3Container.current && data.children?.length) {
-      // Specify the chart’s colors and approximate radius (it will be adjusted at the end).
-      const color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, data.children.length + 1));
-      const radius = width / 6;
+      const radius: number = width / 6;
 
-      // Compute the layout (sort the data). https://d3js.org/d3-hierarchy/hierarchy
-      const hierarchy = d3
+      // Compute the layout (sort the data).
+      const hierarchy: HierarchyNode<SunburstData> = d3
         .hierarchy(data)
-        .sum((d) => {
-          const counters = d.counters?.[0];
+        .sum((d: SunburstData) => {
+          const counters: Counters | undefined = d.counters?.[0];
           return (
             (counters?.INSTRUCTION?.covered || 0) +
             (counters?.INSTRUCTION?.missed || 0) +
@@ -34,59 +41,50 @@ export const SunburstChart = ({ width, height, data }: SunburstChartProps) => {
             (counters?.COMPLEXITY?.covered || 0) +
             (counters?.COMPLEXITY?.missed || 0) +
             (counters?.METHOD?.covered || 0) +
-            (counters?.METHOD?.missed || 0) +
-            (counters?.CLASS?.covered || 0) +
-            (counters?.CLASS?.missed || 0)
+            (counters?.METHOD?.missed || 0)
           );
         })
-        .sort((a, b) => (b.value as number) - (a.value as number));
-      // root node
-      const root = d3.partition<SunburstData>().size([2 * Math.PI, hierarchy.height + 1])(hierarchy);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      root.each((d) => (d.current = d));
+        .sort((a: HierarchyNode<SunburstData>, b: HierarchyNode<SunburstData>) => (b.value as number) - (a.value as number));
 
-      // Create the arc generator.
-      const arc = d3
+      const root: HierarchyRectangularNode<SunburstData> = d3.partition<SunburstData>().size([2 * Math.PI, hierarchy.height + 1])(
+        hierarchy,
+      );
+      root.each((d: ExtendedHierarchyNode) => (d.current = d));
+
+      // Color scale for top-level categories (depth 1), dark → light
+      const topColor: ScaleOrdinal<string, string> = d3.scaleOrdinal<string, string>(BLUE_PALETTE);
+      const maxDepth: number = root.height;
+
+      // Arc generator
+      const arc: Arc<never, { x0: number; y0: number; x1: number; y1: number }> = d3
         .arc<{ x0: number; y0: number; x1: number; y1: number }>()
-        .startAngle((d) => d.x0)
-        .endAngle((d) => d.x1)
-        .padAngle((d) => Math.min((d.x1 - d.x0) / 2, 0.005))
+        .startAngle((d: { x0: number; y0: number; x1: number; y1: number }) => d.x0)
+        .endAngle((d: { x0: number; y0: number; x1: number; y1: number }) => d.x1)
+        .padAngle((d: { x0: number; y0: number; x1: number; y1: number }) => Math.min((d.x1 - d.x0) / 2, 0.005))
         .padRadius(radius * 1.5)
-        .innerRadius((d) => d.y0 * radius)
-        .outerRadius((d) => Math.max(d.y0 * radius, d.y1 * radius - 1));
+        .innerRadius((d: { x0: number; y0: number; x1: number; y1: number }) => d.y0 * radius)
+        .outerRadius((d: { x0: number; y0: number; x1: number; y1: number }) => Math.max(d.y0 * radius, d.y1 * radius - 1));
 
-      // Create the SVG container.
+      // SVG
       const svg = d3
         .select(d3Container.current)
         .attr('viewBox', [-height / 2, -width / 2, height, width])
         .style('font', '15px sans-serif');
       svg.selectAll('*').remove();
 
-      // Append the arcs.
+      // Paths
       const path = svg
         .append('g')
         .selectAll('path')
         .data(root.descendants().slice(1))
         .join('path')
-        .attr('fill', (d) => {
-          while (d.depth > 1) {
-            if (d.parent !== null) {
-              d = d.parent;
-            }
-          }
-          return color(d.data.name);
-        })
+        .attr('fill', (d: HierarchyRectangularNode<SunburstData>) => computeNodeFill(d, topColor, maxDepth))
+        .attr('fill-opacity', (d: ExtendedHierarchyNode) => (arcVisible(d.current) ? (d.children ? 0.6 : 0.4) : 0))
+        .attr('pointer-events', (d: ExtendedHierarchyNode) => (arcVisible(d.current) ? 'auto' : 'none'))
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        .attr('fill-opacity', (d) => (arcVisible(d.current) ? (d.children ? 0.6 : 0.4) : 0))
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        .attr('pointer-events', (d) => (arcVisible(d.current) ? 'auto' : 'none'))
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        .attr('d', (d) => arc(d.current))
-        .on('mouseenter', (event, d) => {
+        .attr('d', (d: ExtendedHierarchyNode) => arc(d.current))
+        .on('mouseenter', (event, d: HierarchyRectangularNode<SunburstData>) => {
           const aggregatedCounters = calculateAggregatedCounters(d);
           setTooltip({
             visible: true,
@@ -122,20 +120,23 @@ export const SunburstChart = ({ width, height, data }: SunburstChartProps) => {
           ]);
         })
         .on('mousemove', (event) => {
-          setTooltip((prev) => ({ ...prev, x: event.pageX + 10, y: event.pageY + 10 }));
+          setTooltip((prev: { visible: boolean; content: string; x: number; y: number }) => ({
+            ...prev,
+            x: event.pageX + 10,
+            y: event.pageY + 10,
+          }));
         })
         .on('mouseleave', () => {
-          setTooltip((prev) => ({ ...prev, visible: false }));
+          setTooltip((prev: { visible: boolean; content: string; x: number; y: number }) => ({ ...prev, visible: false }));
         });
 
-      // Make them clickable if they have children.
+      // Click to zoom
       path
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        .filter((d) => d.children)
+        .filter((d: HierarchyRectangularNode<SunburstData>) => d.children !== undefined && d.children.length > 0)
         .style('cursor', 'pointer')
-        .on('click', (e, p) => clicked(e, p, parent, svg, root, arc, path, label, radius));
+        .on('click', (e, p: HierarchyRectangularNode<SunburstData>) => clicked(e, p, parent, svg, root, arc, path, label, radius));
 
+      // Labels
       const label = svg
         .append('g')
         .attr('pointer-events', 'none')
@@ -145,14 +146,11 @@ export const SunburstChart = ({ width, height, data }: SunburstChartProps) => {
         .data(root.descendants().slice(1))
         .join('text')
         .attr('dy', '0.35em')
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        .attr('fill-opacity', (d) => +labelVisible(d.current))
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        .attr('transform', (d) => labelTransform(d.current, radius))
-        .text((d) => d.data.name);
+        .attr('fill-opacity', (d: ExtendedHierarchyNode) => +labelVisible(d.current))
+        .attr('transform', (d: ExtendedHierarchyNode) => labelTransform(d.current, radius))
+        .text((d: HierarchyRectangularNode<SunburstData>) => d.data.name);
 
+      // Back button (center circle)
       const parent: d3.Selection<SVGCircleElement, d3.HierarchyRectangularNode<SunburstData>, null, unknown> = svg
         .append('circle')
         .datum(root)
@@ -161,12 +159,12 @@ export const SunburstChart = ({ width, height, data }: SunburstChartProps) => {
         .attr('pointer-events', 'all')
         .style('cursor', 'pointer')
         .on('mouseover', function () {
-          d3.select(this).attr('fill', 'rgba(0, 0, 0, 0.3)'); // Darker on hover
+          d3.select(this).attr('fill', 'rgba(0, 0, 0, 0.3)');
         })
         .on('mouseout', function () {
-          d3.select(this).attr('fill', 'rgba(0, 0, 0, 0.1)'); // Revert to default
+          d3.select(this).attr('fill', 'rgba(0, 0, 0, 0.1)');
         })
-        .on('click', (e, p) => clicked(e, p, parent, svg, root, arc, path, label, radius));
+        .on('click', (e, p: HierarchyRectangularNode<SunburstData>) => clicked(e, p, parent, svg, root, arc, path, label, radius));
 
       svg
         .append('image')
@@ -177,8 +175,7 @@ export const SunburstChart = ({ width, height, data }: SunburstChartProps) => {
         .attr('y', -35)
         .attr('pointer-events', 'none');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [d3Container.current]);
+  }, [data, height, width]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -284,65 +281,64 @@ export const SunburstChart = ({ width, height, data }: SunburstChartProps) => {
   );
 };
 
-function calculateAggregatedCounters(node: HierarchyRectangularNode<SunburstData>) {
-  const aggregatedCounters = {
+function calculateAggregatedCounters(node: HierarchyRectangularNode<SunburstData>): Counters {
+  const aggregated = {
     INSTRUCTION: { covered: 0, missed: 0 },
     LINE: { covered: 0, missed: 0 },
     COMPLEXITY: { covered: 0, missed: 0 },
     METHOD: { covered: 0, missed: 0 },
+    CLASS: { covered: 0, missed: 0 },
   };
 
-  // Add current node's counters
-  if (node.data.children) {
-    for (const key in aggregatedCounters) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      if (node.data.counters?.[0][key]) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        aggregatedCounters[key].covered += node.counters[0][key].covered || 0;
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        aggregatedCounters[key].missed += node.counters[0][key].missed || 0;
-      }
-    }
-  } else {
-    for (const key in aggregatedCounters) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      aggregatedCounters[key].covered += node.data.counters[0][key].covered || 0;
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      aggregatedCounters[key].missed += node.data.counters[0][key].missed || 0;
+  // add current node's counters (if present)
+  const selfCounters: Counters | undefined = node.data.counters?.[0];
+  if (selfCounters) {
+    for (const key of METRICS) {
+      aggregated[key].covered += selfCounters[key]?.covered ?? 0;
+      aggregated[key].missed += selfCounters[key]?.missed ?? 0;
     }
   }
 
-  // Recurse through children
+  // recurse into children
   if (node.children) {
     for (const child of node.children) {
-      const childCounters = calculateAggregatedCounters(child);
-      for (const key in aggregatedCounters) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        aggregatedCounters[key].covered += childCounters[key].covered;
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        aggregatedCounters[key].missed += childCounters[key].missed;
+      const childAgg: Counters = calculateAggregatedCounters(child);
+      for (const key of METRICS) {
+        aggregated[key].covered += childAgg[key].covered;
+        aggregated[key].missed += childAgg[key].missed;
       }
     }
   }
 
-  return aggregatedCounters;
+  return aggregated;
+}
+
+// Find the depth-1 ancestor for a node
+function topLevelAncestor(n: d3.HierarchyRectangularNode<SunburstData>) {
+  while (n.depth > 1 && n.parent) {
+    n = n.parent;
+  }
+  return n;
+}
+
+// Compute a lighter shade toward white based on depth.
+// topColor: ordinal scale for top-level colors
+// maxDepth: deepest depth in the partition
+function computeNodeFill(n: d3.HierarchyRectangularNode<SunburstData>, topColor: d3.ScaleOrdinal<string, string>, maxDepth: number) {
+  const top: HierarchyRectangularNode<SunburstData> = topLevelAncestor(n);
+  const base: string = topColor(top.data.name); // dark base for this branch
+  const t: number = maxDepth <= 1 ? 0 : Math.max(0, Math.min(1, (n.depth - 1) / (maxDepth - 1)));
+  return d3.interpolateLab(base, '#ffffff')(t * 0.85);
 }
 
 // Handle zoom on click.
 function clicked(
   event: MouseEvent,
-  p: d3.HierarchyRectangularNode<SunburstData>,
+  p: ExtendedHierarchyNode,
   parent: d3.Selection<SVGCircleElement, d3.HierarchyRectangularNode<SunburstData>, null, unknown>,
   svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
   root: d3.HierarchyRectangularNode<SunburstData>,
-  arc: d3.Arc<unknown, { x0: number; y0: number; x1: number; y1: number }>,
+  arc: d3.Arc<never, { x0: number; y0: number; x1: number; y1: number }>,
   path: d3.Selection<d3.BaseType | SVGPathElement, d3.HierarchyRectangularNode<SunburstData>, SVGGElement, unknown>,
   label: d3.Selection<d3.BaseType | SVGTextElement, d3.HierarchyRectangularNode<SunburstData>, SVGGElement, unknown>,
   radius: number,
@@ -351,9 +347,7 @@ function clicked(
   parent.datum(p.parent || root);
 
   root.each(
-    (d) =>
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
+    (d: ExtendedHierarchyNode) =>
       (d.target = {
         x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
         x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
@@ -364,43 +358,39 @@ function clicked(
 
   const t = svg.transition().duration(750);
 
-  // Transition the data on all arcs, even the ones that aren’t visible,
-  // so that if this transition is interrupted, entering arcs will start
-  // the next transition from the desired position.
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   path
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     .transition(t)
-    .tween('data', (d) => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
+    .tween('data', (d: ExtendedHierarchyNode) => {
+      if (!d.target || !d.current) return () => null;
       const i = d3.interpolate(d.current, d.target);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
-      return (t) => (d.current = i(t));
+      return (t: number) => (d.current = i(t));
     })
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    .filter(function (d) {
+    .filter(function (d: ExtendedHierarchyNode) {
+      if (!d.target) return false;
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       return +this.getAttribute('fill-opacity') || arcVisible(d.target);
     })
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    .attr('fill-opacity', (d) => (arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0))
+    .attr('fill-opacity', (d: ExtendedHierarchyNode) => (arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0))
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    .attr('pointer-events', (d) => (arcVisible(d.target) ? 'auto' : 'none'))
+    .attr('pointer-events', (d: ExtendedHierarchyNode) => (arcVisible(d.target) ? 'auto' : 'none'))
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    .attrTween('d', (d) => () => arc(d.current));
+    .attrTween('d', (d: ExtendedHierarchyNode) => () => arc(d.current));
 
   label
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    .filter(function (d) {
+    .filter(function (d: HierarchyRectangularNode<SunburstData>) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       return +this.getAttribute('fill-opacity') || labelVisible(d.target);
@@ -410,22 +400,23 @@ function clicked(
     .transition(t)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    .attr('fill-opacity', (d) => +labelVisible(d.target))
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    .attrTween('transform', (d) => () => labelTransform(d.current, radius));
+    .attr('fill-opacity', (d: ExtendedHierarchyNode) => +labelVisible(d.target))
+    .attrTween('transform', (d: ExtendedHierarchyNode) => () => labelTransform(d.current, radius));
 }
 
-function arcVisible(d: { x0: number; y0: number; x1: number; y1: number }) {
+function arcVisible(d: ExtendedHierarchyNode | undefined) {
+  if (!d) return false;
   return d.y1 <= 3 && d.y0 >= 1 && d.x1 > d.x0;
 }
 
-function labelVisible(d: { x0: number; y0: number; x1: number; y1: number }) {
+function labelVisible(d: ExtendedHierarchyNode | undefined) {
+  if (!d) return false;
   return d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.03;
 }
 
-function labelTransform(d: { x0: number; y0: number; x1: number; y1: number }, radius: number) {
-  const x = (((d.x0 + d.x1) / 2) * 180) / Math.PI;
-  const y = ((d.y0 + d.y1) / 2) * radius;
+function labelTransform(d: ExtendedHierarchyNode | undefined, radius: number) {
+  if (!d) return '';
+  const x: number = (((d.x0 + d.x1) / 2) * 180) / Math.PI;
+  const y: number = ((d.y0 + d.y1) / 2) * radius;
   return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
 }

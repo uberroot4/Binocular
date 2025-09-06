@@ -1,31 +1,31 @@
-export interface SettingsType {
+import { ChangeEvent } from 'react';
+
+export interface JacocoSettings {
   selectedReport: string;
 }
 
-function Settings(props: { settings: SettingsType; setSettings: (newSettings: SettingsType) => void }) {
+function Settings(props: { settings: JacocoSettings; setSettings: (newSettings: JacocoSettings) => void }) {
   return (
-    <div className={'text-xs'}>
-      <table>
-        <tbody>
-          <tr>
-            <td>Report:</td>
-            <td>
-              <select
-                className={'select select-accent select-xs'}
-                defaultValue={props.settings.selectedReport}
-                onChange={(event) =>
-                  props.setSettings({
-                    selectedReport: event.target.value,
-                  })
-                }>
-                <option value={'last'}>last</option>
-                <option value={'first'}>first</option>
-              </select>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div>
+        <label className="form-control w-full max-w-xs">
+          <div className="label">
+            <span className="label-text">Report:</span>
+          </div>
+          <select
+            className="select select-bordered select-sm"
+            defaultValue={props.settings.selectedReport}
+            onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+              props.setSettings({
+                selectedReport: event.target.value,
+              })
+            }>
+            <option value={'last'}>last</option>
+            <option value={'first'}>first</option>
+          </select>
+        </label>
+      </div>
+    </>
   );
 }
 
