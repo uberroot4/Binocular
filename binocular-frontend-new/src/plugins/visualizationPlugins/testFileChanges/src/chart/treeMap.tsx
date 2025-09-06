@@ -82,75 +82,73 @@ export const TreeMap = ({ width, height, data }: TreeMapProps) => {
     const displayName: string = truncateTextToWidth(leaf.data.name, availableWidth);
 
     return (
-      <>
-        <g
-          key={leaf.id}
-          onMouseEnter={(e) => {
-            setTooltip({
-              visible: true,
-              path: `${leaf.data.pathName}`,
-              x:
-                e.clientX + getTextWidth(`${leaf.data.pathName}`) + 20 < windowWidth
-                  ? e.clientX + 20
-                  : e.clientX - (getTextWidth(`${leaf.data.pathName}`) + 20) - 50,
-              y: e.clientY,
-            });
-            const tableData: { user: string; amount: number }[] = [];
-            tableData.push(...leaf.data.changes);
-            tableData.push({ user: 'Total', amount: amountOfChanges });
-            setTableData(tableData);
-          }}
-          onMouseMove={(e) => {
-            setTooltip((prev: { visible: boolean; path: string; x: number; y: number }) => ({
-              ...prev,
-              x:
-                e.clientX + getTextWidth(`${leaf.data.pathName}`) + 20 < windowWidth
-                  ? e.clientX + 20
-                  : e.clientX - (getTextWidth(`${leaf.data.pathName}`) + 20) - 50,
-              y: e.clientY,
-            }));
-          }}
-          onMouseLeave={() => {
-            setTooltip({ visible: false, path: '', x: 0, y: 0 });
-            setTableData([]);
-          }}>
-          {/* Rectangle for the leaf node */}
-          <rect
-            x={leaf.x0}
-            y={leaf.y0 + groupLabelHeight}
-            width={rectWidth}
-            height={rectHeight}
-            fill={colorScale(amountOfChanges)}
-            className={'opacity-80 hover:opacity-100'}
-          />
-          {/* File name */}
-          {rectWidth > 10 + 2 * PADDING_RECTANGLE && rectHeight > 12 + 2 * PADDING_RECTANGLE && (
-            <text
-              x={leaf.x0 + PADDING_RECTANGLE}
-              y={leaf.y0 + PADDING_RECTANGLE + groupLabelHeight}
-              fontSize={12}
-              fontFamily={'sans-serif'}
-              textAnchor="start"
-              alignmentBaseline="hanging"
-              fill="black">
-              {displayName}
-            </text>
-          )}
-          {/* Number of changes */}
-          {rectWidth > 10 + 2 * PADDING_RECTANGLE && rectHeight > 12 * 2 + 2 * PADDING_RECTANGLE && (
-            <text
-              x={leaf.x0 + PADDING_RECTANGLE}
-              y={leaf.y0 + 18 + groupLabelHeight}
-              fontSize={12}
-              textAnchor="start"
-              alignmentBaseline="hanging"
-              fill="black"
-              className="font-light">
-              {leaf.data.changes.reduce((sum: number, change: { user: string; amount: number }) => sum + change.amount, 0)}
-            </text>
-          )}
-        </g>
-      </>
+      <g
+        key={leaf.data.pathName}
+        onMouseEnter={(e) => {
+          setTooltip({
+            visible: true,
+            path: `${leaf.data.pathName}`,
+            x:
+              e.clientX + getTextWidth(`${leaf.data.pathName}`) + 20 < windowWidth
+                ? e.clientX + 20
+                : e.clientX - (getTextWidth(`${leaf.data.pathName}`) + 20) - 50,
+            y: e.clientY,
+          });
+          const tableData: { user: string; amount: number }[] = [];
+          tableData.push(...leaf.data.changes);
+          tableData.push({ user: 'Total', amount: amountOfChanges });
+          setTableData(tableData);
+        }}
+        onMouseMove={(e) => {
+          setTooltip((prev: { visible: boolean; path: string; x: number; y: number }) => ({
+            ...prev,
+            x:
+              e.clientX + getTextWidth(`${leaf.data.pathName}`) + 20 < windowWidth
+                ? e.clientX + 20
+                : e.clientX - (getTextWidth(`${leaf.data.pathName}`) + 20) - 50,
+            y: e.clientY,
+          }));
+        }}
+        onMouseLeave={() => {
+          setTooltip({ visible: false, path: '', x: 0, y: 0 });
+          setTableData([]);
+        }}>
+        {/* Rectangle for the leaf node */}
+        <rect
+          x={leaf.x0}
+          y={leaf.y0 + groupLabelHeight}
+          width={rectWidth}
+          height={rectHeight}
+          fill={colorScale(amountOfChanges)}
+          className={'opacity-80 hover:opacity-100'}
+        />
+        {/* File name */}
+        {rectWidth > 10 + 2 * PADDING_RECTANGLE && rectHeight > 12 + 2 * PADDING_RECTANGLE && (
+          <text
+            x={leaf.x0 + PADDING_RECTANGLE}
+            y={leaf.y0 + PADDING_RECTANGLE + groupLabelHeight}
+            fontSize={12}
+            fontFamily={'sans-serif'}
+            textAnchor="start"
+            alignmentBaseline="hanging"
+            fill="black">
+            {displayName}
+          </text>
+        )}
+        {/* Number of changes */}
+        {rectWidth > 10 + 2 * PADDING_RECTANGLE && rectHeight > 12 * 2 + 2 * PADDING_RECTANGLE && (
+          <text
+            x={leaf.x0 + PADDING_RECTANGLE}
+            y={leaf.y0 + 18 + groupLabelHeight}
+            fontSize={12}
+            textAnchor="start"
+            alignmentBaseline="hanging"
+            fill="black"
+            className="font-light">
+            {leaf.data.changes.reduce((sum: number, change: { user: string; amount: number }) => sum + change.amount, 0)}
+          </text>
+        )}
+      </g>
     );
   });
 
