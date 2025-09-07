@@ -1,24 +1,33 @@
 package com.inso_world.binocular.github.service
 
-import com.inso_world.binocular.github.config.BinocularRcLoader
-import com.inso_world.binocular.github.dto.GraphQlUserResponse
-import com.inso_world.binocular.github.dto.ItsGitHubUser
+import com.inso_world.binocular.github.client.GraphQLClient
+import com.inso_world.binocular.github.dto.user.GraphQlUserResponse
+import com.inso_world.binocular.github.dto.user.ItsGitHubUser
 import com.inso_world.binocular.github.dto.PageInfo
-import com.inso_world.binocular.github.exception.ServiceException
+import com.inso_world.binocular.github.dto.issue.GraphQlIssueResponse
+import com.inso_world.binocular.github.dto.issue.ItsGitHubIssue
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 
 /**
  * Service for accessing GitHub API (GraphQl).
  */
 @Service
-class GitHubService (private val webClient: WebClient, private val configLoader: BinocularRcLoader) {
+class GitHubService(
+    private val graphQLClient: GraphQLClient
+) {
 
     private var logger: Logger = LoggerFactory.getLogger(GitHubService::class.java)
 
+    /**
+     * Load all assignable users from GitHub.
+     *
+     * @param owner the owner of the repository
+     * @param repo the name of the GitHub repository
+     * @return list of ItsGitHubUsers
+     */
     fun loadAllAssignableUsers(owner: String, repo: String): Mono<List<ItsGitHubUser>> {
         logger.trace("Load all assignable users from GitHub for $owner $repo")
         val allUsers = mutableListOf<ItsGitHubUser>()
@@ -43,24 +52,9 @@ class GitHubService (private val webClient: WebClient, private val configLoader:
               }
             }
         """
+            val variables: Map<String, Any?> = mapOf("cursor" to cursor)
 
-            val request = mapOf(
-                "query" to query,
-                "variables" to mapOf("cursor" to cursor)
-            )
-
-            return webClient.post()
-                .uri("https://api.github.com/graphql")
-                .header("Authorization", "Bearer ${configLoader.loadGitHubToken()}")
-                .bodyValue(request)
-                .retrieve()
-                .onStatus({ it.is4xxClientError || it.is5xxServerError }) { response ->
-                    logger.error("GitHub API returned error: ${response.statusCode()}")
-                    response.bodyToMono(String::class.java).map { body ->
-                        ServiceException("GitHub API error ${response.statusCode()}: $body")
-                    }
-                }
-                .bodyToMono(GraphQlUserResponse::class.java)
+            return graphQLClient.execute(query, variables, GraphQlUserResponse::class.java)
                 .map { res ->
                     val users = res.data.repository.assignableUsers.nodes
                     val pageInfo = res.data.repository.assignableUsers.pageInfo
