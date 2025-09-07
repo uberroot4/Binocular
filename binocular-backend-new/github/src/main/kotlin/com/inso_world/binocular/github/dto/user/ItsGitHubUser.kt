@@ -1,4 +1,4 @@
-package com.inso_world.binocular.github.dto
+package com.inso_world.binocular.github.dto.user
 
 import com.inso_world.binocular.model.Account
 import com.inso_world.binocular.model.Platform

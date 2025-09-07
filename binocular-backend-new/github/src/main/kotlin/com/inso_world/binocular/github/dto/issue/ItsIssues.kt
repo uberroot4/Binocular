@@ -1,0 +1,8 @@
+package com.inso_world.binocular.github.dto.issue
+
+import com.inso_world.binocular.github.dto.PageInfo
+
+data class ItsIssues(
+    val nodes: List<ItsGitHubIssue>,
+    val pageInfo: PageInfo
+)
