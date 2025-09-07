@@ -76,4 +76,108 @@ class GitHubService(
 
         return fetchAllPages()
     }
+
+    fun loadIssuesWithEvents(owner: String, repo: String): Mono<List<ItsGitHubIssue>> {
+        logger.trace("Load issues with events from GitHub for $owner $repo")
+        val allIssues = mutableListOf<ItsGitHubIssue>()
+
+        fun fetchPage(cursor: String?): Mono<Pair<List<ItsGitHubIssue>, PageInfo>> {
+
+            val query = """
+    query(${"$"}cursor: String) {
+      repository(owner: "$owner", name: "$repo") {
+        issues(first: 100, after: ${"$"}cursor) {
+          totalCount
+          nodes {
+            id
+            number
+            title
+            body
+            state
+            url
+            closedAt
+            createdAt
+            updatedAt
+            labels(first: 100) {
+              nodes {
+                id
+                url
+                name
+                color
+                isDefault
+                description
+              }
+            }
+            milestone {
+              id
+              url
+              number
+              state
+              title
+              description
+              creator {
+                login
+              }
+              createdAt
+              updatedAt
+              closedAt
+              dueOn
+            }
+            author {
+              login
+            }
+            assignees(first: 100) {
+              nodes {
+                login
+              }
+            }
+            timelineItems(first: 200, itemTypes: [CLOSED_EVENT, REFERENCED_EVENT]) {
+              totalCount
+              nodes {
+                ... on ReferencedEvent {
+                  createdAt
+                  commit {
+                    oid
+                  }
+                }
+                ... on ClosedEvent {
+                  createdAt
+                }
+              }
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+"""
+            val variables = mapOf("cursor" to cursor)
+
+            return graphQLClient.execute(query, variables, GraphQlIssueResponse::class.java)
+                .map { res ->
+                    val issuesConnection = res.data.repository.issues
+                    val issues = issuesConnection.nodes
+                    val pageInfo = issuesConnection.pageInfo
+                    logger.info("Fetched ${issues.size} issues, hasNextPage=${pageInfo.hasNextPage}")
+                    issues to pageInfo
+                }
+        }
+
+        fun fetchAllPages(cursor: String? = null): Mono<List<ItsGitHubIssue>> {
+            return fetchPage(cursor).flatMap { (issues, pageInfo) ->
+                allIssues.addAll(issues)
+                if (pageInfo.hasNextPage) {
+                    fetchAllPages(pageInfo.endCursor)
+                } else {
+                    Mono.just(allIssues)
+                }
+            }
+        }
+
+        return fetchAllPages()
+    }
+
 }
