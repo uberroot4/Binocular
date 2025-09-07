@@ -30,7 +30,12 @@ export function createSunburstData(data: DataPluginJacocoReport[], selectedRepor
       const methodName: string = methodElement.getAttribute('name') || 'Unknown Method';
 
       // Get all counter elements within the method
-      const counters: Counters = {};
+      const counters: Counters = {
+        INSTRUCTION: { missed: 0, covered: 0 },
+        LINE: { missed: 0, covered: 0 },
+        COMPLEXITY: { missed: 0, covered: 0 },
+        METHOD: { missed: 0, covered: 0 },
+      };
       const counterElements: HTMLCollectionOf<Element> = methodElement.getElementsByTagName('counter');
       for (let k: number = 0; k < counterElements.length; k++) {
         const counterElement: Element = counterElements[k];

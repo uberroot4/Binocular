@@ -3,11 +3,13 @@ import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { Arc, HierarchyNode, HierarchyRectangularNode, ScaleOrdinal } from 'd3';
 import { Counters, Metric, SunburstData } from './chart.tsx';
 import ArrowBack from '../../assets/arrow-left-long.svg';
+import { formatDate } from '../utilities/utilities.ts';
 
 type SunburstChartProps = {
   width: number;
   height: number;
   data: SunburstData;
+  reportDate: string;
 };
 
 const BLUE_PALETTE: string[] = ['#0D47A1', '#1976D2', '#42A5F5', '#90CAF9', '#E3F2FD'];
@@ -18,7 +20,7 @@ interface ExtendedHierarchyNode extends d3.HierarchyRectangularNode<SunburstData
   target?: { x0: number; y0: number; x1: number; y1: number };
 }
 
-export const SunburstChart = ({ width, height, data }: SunburstChartProps) => {
+export const SunburstChart = ({ width, height, data, reportDate }: SunburstChartProps) => {
   const d3Container: MutableRefObject<SVGSVGElement | null> = useRef<SVGSVGElement | null>(null);
   const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
   const [tableData, setTableData] = useState<{ name: string; covered: number; missed: number }[]>([]);
@@ -179,6 +181,17 @@ export const SunburstChart = ({ width, height, data }: SunburstChartProps) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <span
+        className="w-full h-full"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          zIndex: 1000,
+        }}>
+        Report from: {formatDate(reportDate ?? '')}
+      </span>
       <div style={{ position: 'relative' }}>
         <svg ref={d3Container} width={width} height={height}></svg>
         {tooltip.visible && (

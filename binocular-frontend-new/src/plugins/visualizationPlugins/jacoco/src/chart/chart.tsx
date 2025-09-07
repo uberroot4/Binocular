@@ -4,7 +4,6 @@ import { SunburstChart } from './sunburstChart.tsx';
 import { JacocoSettings } from '../settings/settings.tsx';
 import { useDispatch, useSelector } from 'react-redux';
 import { DataState, setDateRange } from '../reducer';
-import { formatDate } from '../utilities/utilities.ts';
 import { createSunburstData } from '../utilities/dataConverter.ts';
 import { VisualizationPluginProperties } from '../../../../interfaces/visualizationPluginInterfaces/visualizationPluginProperties.ts';
 import { DataPluginJacocoReport } from '../../../../interfaces/dataPluginInterfaces/dataPluginArtifacts.ts';
@@ -98,11 +97,13 @@ function Chart<SettingsType extends JacocoSettings, DataType>(props: Visualizati
           </div>
         )}
         {dataState === DataState.COMPLETE && (
-            <div>
-              Report from:{' '}
-              {formatDate(props.settings.selectedReport === 'first' ? jacocoReportData[1].created_at : jacocoReportData[0].created_at)}
-            </div>
-          ) && <SunburstChart width={chartWidth} height={chartHeight} data={chartData} />}
+          <SunburstChart
+            width={chartWidth}
+            height={chartHeight}
+            data={chartData}
+            reportDate={props.settings.selectedReport === 'first' ? jacocoReportData[1].created_at : jacocoReportData[0].created_at}
+          />
+        )}
       </div>
     </>
   );
