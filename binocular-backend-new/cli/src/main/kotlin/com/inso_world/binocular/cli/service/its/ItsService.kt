@@ -32,7 +32,7 @@ class ItsService(
                 if (missing.isNotEmpty()) {
                     // new accounts to save
                     logger.debug("Saving ${missing.size} new accounts")
-                    accountService.saveAll(missing as List<Account>).map { saved ->
+                    accountService.saveAll(missing as List<Account>, project).map { saved ->
                         saved + existing
                     }
                 } else {
