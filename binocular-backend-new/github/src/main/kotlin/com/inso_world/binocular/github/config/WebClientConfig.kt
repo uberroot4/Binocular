@@ -9,6 +9,7 @@ open class WebClientConfig {
 
     @Bean
     open fun webClient(): WebClient {
-        return WebClient.builder().build()
+        return WebClient.builder()
+            .build()
     }
 }
