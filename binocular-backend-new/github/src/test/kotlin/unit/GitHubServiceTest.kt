@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.inso_world.binocular.github.dto.issue.GraphQlIssueResponse
 import com.inso_world.binocular.github.service.GitHubService
 import org.junit.jupiter.api.Nested
 import org.mockito.kotlin.any
@@ -23,17 +24,19 @@ class GitHubServiceTest {
 
     private val mapper = jacksonObjectMapper()
 
-    private fun loadResponse(filename: String): GraphQlUserResponse {
-        val resource = ClassPathResource("response/$filename")
-        return mapper.readValue(resource.file)
-    }
 
     @Nested
     inner class LoadUsers {
+
+        private fun loadUserResponse(filename: String): GraphQlUserResponse {
+            val resource = ClassPathResource("response/$filename")
+            return mapper.readValue(resource.file)
+        }
+
         @Test
         fun `should load all assignable users with pagination`() {
-            val responsePage1 = loadResponse("MockUsersHasNextPage.json")
-            val responsePage2 = loadResponse("MockUsersNoNextPage.json")
+            val responsePage1 = loadUserResponse("MockUsersHasNextPage.json")
+            val responsePage2 = loadUserResponse("MockUsersNoNextPage.json")
 
             // mock response page 1
             whenever(graphQLClient.execute(
@@ -65,7 +68,7 @@ class GitHubServiceTest {
 
         @Test
         fun `should load all assignable users without pagination`() {
-            val responsePage = loadResponse("MockUsersNoNextPage.json")
+            val responsePage = loadUserResponse("MockUsersNoNextPage.json")
 
             // mock response page 1
             whenever(graphQLClient.execute(
@@ -86,6 +89,74 @@ class GitHubServiceTest {
                             && it.id.isNotBlank() }
                 }
                 .verifyComplete()
+        }
+    }
+
+    @Nested
+    inner class LoadIssues {
+
+        private fun loadIssueResponse(filename: String): GraphQlIssueResponse {
+            val resource = ClassPathResource("response/$filename")
+            return mapper.readValue(resource.file)
+        }
+
+        @Test
+        fun `should load all issues without pagination`() {
+            val responsePage = loadIssueResponse("BinocularIssuesSmall.json")
+
+            // mock response page 1
+            whenever(graphQLClient.execute(
+                any(),
+                argThat { arg -> arg != null && arg["cursor"] == null },
+                eq(GraphQlIssueResponse::class.java)
+            )).thenReturn(Mono.just(responsePage))
+
+            val resultMono = gitHubService.loadIssuesWithEvents("INSO-World", "Binocular")
+
+            StepVerifier.create(resultMono)
+                .expectNextMatches { issues ->
+                    issues.size == 12 &&
+                            issues[0].number == 177 &&
+                            issues.last().number == 205
+                    issues.all { it.id.isNotBlank() &&
+                    it.title.isNotBlank() }
+                    // TODO verify commits, milestones ...
+                }
+                .verifyComplete()
+        }
+
+        @Test
+        fun `should load all issues with pagination`() {
+            val responsePage1 = loadIssueResponse("BinocularIssuesHasNextPage.json")
+            val responsePage2 = loadIssueResponse("BinocularIssuesNoNextPage.json")
+
+            // mock response page 1
+            whenever(graphQLClient.execute(
+                any(),
+                argThat { arg -> arg != null && arg["cursor"] == null },
+                eq(GraphQlIssueResponse::class.java)
+            )).thenReturn(Mono.just(responsePage1))
+
+            // mock response page 2
+            whenever(graphQLClient.execute(
+                any(),
+                argThat { arg -> arg != null && arg["cursor"] == "Y3Vyc29yOnYyOpK5MjAyMy0xMS0wMlQxNDowMjo0OCswMTowMM51q_K6" },
+                eq(GraphQlIssueResponse::class.java)
+            )).thenReturn(Mono.just(responsePage2))
+
+            val resultMono = gitHubService.loadIssuesWithEvents("INSO-World", "Binocular")
+
+            StepVerifier.create(resultMono)
+                .expectNextMatches { issues ->
+                    issues.size == 181 &&
+                            issues[0].number == 2 &&
+                            issues.last().number == 339
+                    issues.all { it.id.isNotBlank() &&
+                            it.title.isNotBlank() }
+                    // TODO verify commits, milestones ...
+                }
+                .verifyComplete()
+
         }
     }
 

@@ -10,8 +10,8 @@ data class ItsMilestone(
     val title: String,
     val description: String?,
     val creator: ItsUser,
-    val createdAt: LocalDateTime?,
-    val updatedAt: LocalDateTime?,
-    val closedAt: LocalDateTime?,
-    val dueOn: LocalDateTime?,
+    val createdAt: String?,
+    val updatedAt: String?,
+    val closedAt: String?,
+    val dueOn: String?,
 )
