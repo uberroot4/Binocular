@@ -2,6 +2,7 @@ package com.inso_world.binocular.cli.service.its
 
 import com.inso_world.binocular.core.service.AccountInfrastructurePort
 import com.inso_world.binocular.model.Account
+import com.inso_world.binocular.model.Project
 import jakarta.validation.Valid
 import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
