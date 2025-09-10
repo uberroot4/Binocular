@@ -10,6 +10,7 @@ import reactor.test.StepVerifier
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.inso_world.binocular.github.dto.issue.GraphQlIssueResponse
+import com.inso_world.binocular.github.dto.issue.ItsReferencedEvent
 import com.inso_world.binocular.github.service.GitHubService
 import org.junit.jupiter.api.Nested
 import org.mockito.kotlin.any
@@ -118,9 +119,36 @@ class GitHubServiceTest {
                     issues.size == 12 &&
                             issues[0].number == 177 &&
                             issues.last().number == 205
-                    issues.all { it.id.isNotBlank() &&
-                    it.title.isNotBlank() }
-                    // TODO verify commits, milestones ...
+                    issues.all {
+                        it.id.isNotBlank() &&
+                                it.title.isNotBlank()
+                    }
+
+                    // get all commits (only referenced events)
+                    val allCommits = issues
+                        .flatMap { issue -> issue.timelineItems?.nodes ?: emptyList() }
+                        .filterIsInstance<ItsReferencedEvent>()
+                        .mapNotNull { it.commit }
+
+                    // verify that all mapped commits have oids
+                    allCommits.isNotEmpty() &&
+                            allCommits.all { it.oid.isNotBlank() }
+
+                    // get all users
+                    val allUsers = issues
+                        .flatMap { it.assignees?.nodes ?: emptyList() }
+
+                    // verify that all users have a login
+                    allUsers.isNotEmpty() &&
+                            allUsers.all { it.login.isNotBlank() }
+
+                    // get all labels
+                    val allLabels = issues
+                        .flatMap { it.labels?.nodes ?: emptyList() }
+
+                    // verify that all labels have a name
+                    allLabels.isNotEmpty() &&
+                            allLabels.all { it.name.isNotBlank() }
                 }
                 .verifyComplete()
         }
@@ -153,10 +181,34 @@ class GitHubServiceTest {
                             issues.last().number == 339
                     issues.all { it.id.isNotBlank() &&
                             it.title.isNotBlank() }
-                    // TODO verify commits, milestones ...
+
+                    // get all commits (only referenced events)
+                    val allCommits = issues
+                        .flatMap { issue -> issue.timelineItems?.nodes ?: emptyList() }
+                        .filterIsInstance<ItsReferencedEvent>()
+                        .mapNotNull { it.commit }
+
+                    // verify that all mapped commits have oids
+                    allCommits.isNotEmpty() &&
+                            allCommits.all { it.oid.isNotBlank() }
+
+                    // get all users
+                    val allUsers = issues
+                        .flatMap { it.assignees?.nodes ?: emptyList() }
+
+                    // verify that all users have a login
+                    allUsers.isNotEmpty() &&
+                            allUsers.all { it.login.isNotBlank() }
+
+                    // get all labels
+                    val allLabels = issues
+                        .flatMap { it.labels?.nodes ?: emptyList() }
+
+                    // verify that all labels have a name
+                    allLabels.isNotEmpty() &&
+                            allLabels.all { it.name.isNotBlank() }
                 }
                 .verifyComplete()
-
         }
     }
 
