@@ -1,6 +1,6 @@
 package unit
 
-import com.inso_world.binocular.github.client.GraphQLClient
+import com.inso_world.binocular.github.client.GraphQlClient
 import com.inso_world.binocular.github.dto.user.GraphQlUserResponse
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -20,7 +20,7 @@ import org.mockito.kotlin.whenever
 
 class GitHubServiceTest {
 
-    private val graphQLClient = Mockito.mock(GraphQLClient::class.java)
+    private val graphQLClient = Mockito.mock(GraphQlClient::class.java)
     private val gitHubService = GitHubService(graphQLClient)
 
     private val mapper = jacksonObjectMapper()

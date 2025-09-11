@@ -9,11 +9,11 @@ import reactor.core.publisher.Mono
 import java.time.Duration
 
 @Component
-class GraphQLClient(
+class GraphQlClient(
     private val webClient: WebClient,
     private val configLoader: BinocularRcLoader
 ) {
-    private val logger = LoggerFactory.getLogger(GraphQLClient::class.java)
+    private val logger = LoggerFactory.getLogger(GraphQlClient::class.java)
 
     fun <T> execute(
         query: String,

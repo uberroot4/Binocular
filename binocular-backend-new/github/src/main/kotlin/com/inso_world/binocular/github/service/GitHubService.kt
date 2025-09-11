@@ -1,6 +1,6 @@
 package com.inso_world.binocular.github.service
 
-import com.inso_world.binocular.github.client.GraphQLClient
+import com.inso_world.binocular.github.client.GraphQlClient
 import com.inso_world.binocular.github.dto.user.GraphQlUserResponse
 import com.inso_world.binocular.github.dto.user.ItsGitHubUser
 import com.inso_world.binocular.github.dto.PageInfo
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
  */
 @Service
 class GitHubService(
-    private val graphQLClient: GraphQLClient
+    private val graphQLClient: GraphQlClient
 ) {
 
     private var logger: Logger = LoggerFactory.getLogger(GitHubService::class.java)
