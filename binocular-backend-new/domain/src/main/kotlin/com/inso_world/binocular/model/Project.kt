@@ -11,6 +11,7 @@ class Project(
     @field:NotBlank
     val name: String,
     val issues: MutableSet<Issue> = mutableSetOf(),
+    val accounts: MutableSet<Account> = mutableSetOf(),
     val description: String? = null,
     var repo: Repository? = null,
 ) {
