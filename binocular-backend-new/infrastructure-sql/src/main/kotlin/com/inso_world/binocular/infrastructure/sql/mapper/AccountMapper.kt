@@ -11,7 +11,7 @@ package com.inso_world.binocular.infrastructure.sql.mapper
  import org.springframework.transaction.annotation.Transactional
 
  @Component
- class AccountMapper
+ internal class AccountMapper
     @Autowired
     constructor(
         private val proxyFactory: RelationshipProxyFactory,

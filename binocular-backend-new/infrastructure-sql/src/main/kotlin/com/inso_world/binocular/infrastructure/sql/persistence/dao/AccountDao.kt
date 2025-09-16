@@ -3,9 +3,12 @@ package com.inso_world.binocular.infrastructure.sql.persistence.dao
 import com.inso_world.binocular.infrastructure.sql.persistence.dao.interfaces.IAccountDao
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.AccountEntity
 import com.inso_world.binocular.infrastructure.sql.persistence.repository.AccountRepository
+import com.inso_world.binocular.infrastructure.sql.persistence.entity.IssueEntity
+import com.inso_world.binocular.infrastructure.sql.persistence.entity.MergeRequestEntity
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Repository
+import java.util.stream.Stream
 
 @Repository
 internal class AccountDao(
@@ -29,7 +32,19 @@ internal class AccountDao(
         return this.repo.findAll(AccountEntitySpecification.hasGidIn(gids))
     }
 
+    override fun findAllByIssue(issue: IssueEntity): Stream<AccountEntity> {
+        return repo.findAllByIssuesContaining(issue)
+    }
 
+    // TODO
+//    override fun findAllByMergeRequest(mergeRequest: MergeRequestEntity): Stream<AccountEntity> {
+//        return repo.findAllByMergeRequestsContaining(mergeRequest)
+//    }
+
+    // TODO uncomment when NoteEntity is implemented
+//    override fun findAllByNote(note: NoteEntity): Stream<AccountEntity> {
+//        return repo.findAllByNotesContaining(note)
+//    }
 }
 
 

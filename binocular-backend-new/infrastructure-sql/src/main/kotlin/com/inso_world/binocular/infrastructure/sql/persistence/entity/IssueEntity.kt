@@ -43,8 +43,10 @@ internal data class IssueEntity(
 // var labels: MutableList<LabelEntity> = mutableListOf()
 // @OneToMany(mappedBy = "issue", cascade = [CascadeType.ALL], orphanRemoval = true)
 // var mentions: MutableList<MentionEntity> = mutableListOf()
-// @ManyToMany(mappedBy = "issues")
-// var accounts: MutableList<AccountEntity> = mutableListOf()
+
+ @ManyToMany(mappedBy = "issues")
+ var accounts: MutableList<AccountEntity> = mutableListOf(),
+
 // @ManyToMany
 // @JoinTable(
 //     name = "issue_commit_connections",
@@ -66,6 +68,7 @@ internal data class IssueEntity(
 //     inverseJoinColumns = [JoinColumn(name = "note_id")],
 // )
 // var notes: MutableList<NoteEntity> = mutableListOf()
+
     @ManyToMany
     @JoinTable(
         name = "issue_user_connections",
