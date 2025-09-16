@@ -9,6 +9,7 @@ import java.time.LocalDateTime
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = "__typename",
+    defaultImpl = ItsClosedEvent::class
 )
 @JsonSubTypes(
     JsonSubTypes.Type(value = ItsReferencedEvent::class, name = "ReferencedEvent"),
