@@ -9,6 +9,7 @@ import java.time.LocalDateTime
 data class Issue(
     var id: String? = null,
     var iid: Int? = null,
+    val gid: String,
     var title: String? = null,
     var description: String? = null,
     var createdAt: LocalDateTime? = null,
@@ -19,6 +20,7 @@ data class Issue(
     var webUrl: String? = null,
     var mentions: List<Mention> = emptyList(),
     // Relationships
+    val project: Project? = null,
     var accounts: List<Account> = emptyList(),
     var commits: List<Commit> = emptyList(),
     var milestones: List<Milestone> = emptyList(),

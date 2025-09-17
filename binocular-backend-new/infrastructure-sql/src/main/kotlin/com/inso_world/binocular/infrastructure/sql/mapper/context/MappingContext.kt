@@ -2,9 +2,11 @@ package com.inso_world.binocular.infrastructure.sql.mapper.context
 
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.BranchEntity
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.CommitEntity
+import com.inso_world.binocular.infrastructure.sql.persistence.entity.IssueEntity
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.UserEntity
 import com.inso_world.binocular.model.Branch
 import com.inso_world.binocular.model.Commit
+import com.inso_world.binocular.model.Issue
 import com.inso_world.binocular.model.User
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,11 +33,13 @@ internal class MappingContext {
             user.clear()
             commit.clear()
             branch.clear()
+            issue.clear()
         }
         entity.run {
             user.clear()
             commit.clear()
             branch.clear()
+            issue.clear()
         }
         logger.debug("Mapping context cleared")
     }
@@ -44,11 +48,13 @@ internal class MappingContext {
         val user = ConcurrentHashMap<String, User>()
         val commit = ConcurrentHashMap<String, Commit>()
         val branch = ConcurrentHashMap<String, Branch>()
+        val issue = ConcurrentHashMap<String, Issue>()
     }
 
     class EntityMaps {
         val user = ConcurrentHashMap<String, UserEntity>()
         val commit = ConcurrentHashMap<String, CommitEntity>()
         val branch = ConcurrentHashMap<String, BranchEntity>()
+        val issue = ConcurrentHashMap<String, IssueEntity>()
     }
 }

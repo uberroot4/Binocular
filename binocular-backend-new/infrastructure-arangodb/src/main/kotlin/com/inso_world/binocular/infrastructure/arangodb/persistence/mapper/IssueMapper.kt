@@ -39,6 +39,7 @@ class IssueMapper
                 state = domain.state,
                 webUrl = domain.webUrl,
                 mentions = domain.mentions,
+                gid = domain.gid
                 // Relationships are handled by ArangoDB through edges
             )
 
@@ -52,6 +53,7 @@ class IssueMapper
         override fun toDomain(entity: IssueEntity): Issue =
             Issue(
                 id = entity.id,
+                gid = entity.gid,
                 iid = entity.iid,
                 title = entity.title,
                 description = entity.description,

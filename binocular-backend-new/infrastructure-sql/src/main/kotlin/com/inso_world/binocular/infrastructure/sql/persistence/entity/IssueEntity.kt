@@ -2,12 +2,14 @@ package com.inso_world.binocular.infrastructure.sql.persistence.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Temporal
 import jakarta.persistence.TemporalType
@@ -23,6 +25,7 @@ internal data class IssueEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     var id: Long? = null,
+    val gid: String, // external GitHub id
     var iid: Int? = null,
     var title: String? = null,
     @Column(columnDefinition = "TEXT")
@@ -39,6 +42,12 @@ internal data class IssueEntity(
     var state: String? = null,
     @Column(name = "web_url")
     var webUrl: String? = null,
+
+    // project connection
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "project_id", nullable = false, updatable = false)
+    var project: ProjectEntity? = null,
+
 // @OneToMany(mappedBy = "issue", cascade = [CascadeType.ALL], orphanRemoval = true)
 // var labels: MutableList<LabelEntity> = mutableListOf()
 // @OneToMany(mappedBy = "issue", cascade = [CascadeType.ALL], orphanRemoval = true)
@@ -98,4 +107,94 @@ internal data class IssueEntity(
     }
 
     override fun hashCode(): Int = Objects.hash(id, iid, title, description, createdAt, closedAt, updatedAt, state, webUrl, users)
+//    /**
+//     * Gets the mentions as domain model mentions
+//     */
+//    fun getDomainMentions(): List<Mention> {
+//        return mentions.map {
+//            Mention(
+//                commit = it.commit,
+//                createdAt = it.createdAt,
+//                closes = it.closes
+//            )
+//        }
+//    }
+//
+//    /**
+//     * Sets the mentions from domain model mentions
+//     */
+//    fun setDomainMentions(mentions: List<Mention>) {
+//        this.mentions.clear()
+//        this.mentions.addAll(mentions.map {
+//            MentionEntity(
+//                null,
+//                it.commit,
+//                it.createdAt,
+//                it.closes,
+//                null,
+//                this,
+//                null,
+//                null
+//            )
+//        })
+//    }
+//
+//    /**
+//     * Gets the labels as domain model labels
+//     */
+//    fun getDomainLabels(): List<String> {
+//        return labels.map { it.value }
+//    }
+//
+//    /**
+//     * Sets the labels from domain model labels
+//     */
+//    fun setDomainLabels(labels: List<String>) {
+//        this.labels.clear()
+//        this.labels.addAll(labels.map { LabelEntity(null, it, this, null) })
+//    }
+
+    // TODO map labels and mentions
+    fun toDomain() = com.inso_world.binocular.model.Issue(
+        id = this.id?.toString(),
+        iid = this.iid,
+        gid = this.gid,
+        title = this.title,
+        description = this.description,
+        createdAt = this.createdAt,
+        closedAt = this.closedAt,
+        updatedAt = this.updatedAt,
+        state = this.state,
+        webUrl = this.webUrl,
+//        labels = getDomainLabels(),
+//        mentions = getDomainMentions(),
+        // These relationships will be populated by the mapper
+        accounts = emptyList(),
+        commits = emptyList(),
+        milestones = emptyList(),
+        notes = emptyList(),
+        users = emptyList()
+    )
 }
+
+internal fun com.inso_world.binocular.model.Issue.toEntity(): IssueEntity {
+    val entity = IssueEntity(
+        id = this.id?.toLong(),
+        iid = this.iid,
+        title = this.title,
+        description = this.description,
+        createdAt = this.createdAt,
+        closedAt = this.closedAt,
+        updatedAt = this.updatedAt,
+        state = this.state,
+        webUrl = this.webUrl,
+        gid = this.gid,
+    )
+
+    // Set labels and mentions
+//    entity.setDomainLabels(this.labels)
+//    entity.setDomainMentions(this.mentions)
+
+    return entity
+}
+

@@ -1,5 +1,6 @@
 package com.inso_world.binocular.infrastructure.sql.persistence.entity
 
+import com.inso_world.binocular.model.Issue
 import com.inso_world.binocular.model.Project
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -9,6 +10,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import jakarta.validation.constraints.NotBlank
@@ -23,12 +25,12 @@ internal data class ProjectEntity(
 //    var members: MutableSet<ProjectMember> = mutableSetOf(),
 //    @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL], mappedBy = "project", orphanRemoval = true)
 //    var feature: ProjectFeature? = null,
-//    @OneToMany(
-//        fetch = FetchType.LAZY,
-//        cascade = [CascadeType.ALL],
-//        mappedBy = "project",
-//        orphanRemoval = true,
-//    ) var issues: MutableSet<IssueEntity> = mutableSetOf(),
+    @OneToMany(
+        fetch = FetchType.LAZY,
+        cascade = [CascadeType.ALL],
+        mappedBy = "project",
+        orphanRemoval = true,
+    ) var issues: MutableSet<IssueEntity> = mutableSetOf(),
 //    @OneToMany(
 //        fetch = FetchType.LAZY,
 //        cascade = [CascadeType.ALL],
@@ -49,10 +51,10 @@ internal data class ProjectEntity(
 //        pm.projects.add(this)
 //    }
 
-//    fun addIssue(e: Issue) {
-//        this.issues.add(e)
-//        e.project = this
-//    }
+    fun addIssue(e: IssueEntity) {
+        this.issues.add(e)
+        e.project = this
+    }
 
     override fun toString(): String = "Project(id=$id, name=$name, description=$description, repo=$repo)"
 

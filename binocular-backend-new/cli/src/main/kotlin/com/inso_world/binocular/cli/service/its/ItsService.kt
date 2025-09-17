@@ -1,6 +1,8 @@
 package com.inso_world.binocular.cli.service.its
 
+import com.inso_world.binocular.cli.service.ProjectService
 import com.inso_world.binocular.cli.service.VcsService
+import com.inso_world.binocular.github.dto.issue.ItsGitHubIssue
 import com.inso_world.binocular.github.service.GitHubService
 import com.inso_world.binocular.model.Account
 import com.inso_world.binocular.model.Issue
@@ -16,7 +18,8 @@ import reactor.core.publisher.Mono
 @Service
 class ItsService(
     private val gitHubService: GitHubService,
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    private val projectService: ProjectService,
 ) {
     private var logger: Logger = LoggerFactory.getLogger(VcsService::class.java)
 
@@ -43,12 +46,23 @@ class ItsService(
     }
 
     //TODO index issues
-    fun indexIssuesFromGitHub(owner: String, repo: String): Mono<List<Issue>> {
-        logger.info("Indexing issues from GitHub for $owner/$repo")
+    fun indexIssuesFromGitHub(
+        owner: String,
+        repo: String,
+        project: Project
+    ) {
+        logger.trace(">>> indexIssuesFromGitHub({}, {}, {})", owner, repo, project)
 
-        return gitHubService.loadIssuesWithEvents(owner, repo)
-            .map { issues ->
-                issues.map { it.toDomain() }
-            }
+        // get issues from ITS GitHub
+        val itsGitHubIssues = gitHubService.loadIssuesWithEvents(owner, repo).block()
+
+        val issueIds = itsGitHubIssues!!.map { it.id }
+
+        logger.debug("Found ${ issueIds.size } issues from GitHub for $owner/$repo")
+
+        // TODO check what is really needed for this func
+        this.projectService.addIssues(itsGitHubIssues, project)
+
+        logger.trace("<<< indexIssuesFromGitHub({}, {}, {})", owner, repo, project)
     }
 }

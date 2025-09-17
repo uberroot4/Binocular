@@ -5,10 +5,10 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
 data class ItsGitHubIssue(
-    val id: String,
+    val id: String, // external GitHub id for issue
     val number: Int,
     val title: String,
-    val body: String?, //description
+    val body: String?, // description
     val state: String,
     val url: String,
     val closedAt: String?,
@@ -25,6 +25,7 @@ data class ItsGitHubIssue(
             OffsetDateTime.parse(dt).toLocalDateTime()
 
         return Issue(
+            gid = id,
             iid = number,
             title = title,
             description = body,

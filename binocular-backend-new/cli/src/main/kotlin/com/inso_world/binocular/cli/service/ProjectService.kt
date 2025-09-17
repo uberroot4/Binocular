@@ -1,6 +1,9 @@
 package com.inso_world.binocular.cli.service
 
+import com.inso_world.binocular.cli.service.its.IssueService
 import com.inso_world.binocular.core.service.ProjectInfrastructurePort
+import com.inso_world.binocular.github.dto.issue.ItsGitHubIssue
+import com.inso_world.binocular.model.Issue
 import com.inso_world.binocular.model.Project
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -11,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class ProjectService(
     @Autowired private val projectInfrastructurePort: ProjectInfrastructurePort,
+    @Autowired private val issueService: IssueService
 ) {
     private val logger: Logger = LoggerFactory.getLogger(ProjectService::class.java)
 
@@ -33,6 +37,22 @@ class ProjectService(
         } else {
             logger.info("Project '$name' already exists")
             return find
+        }
+    }
+
+    fun addIssues(issueDtos: List<ItsGitHubIssue>, project: Project) {
+
+        // check for all issues if they already exist
+        val existingIssueEntites = this.issueService.checkExisting(issueDtos, project)
+
+        logger.debug("Existing issues: ${existingIssueEntites.first.count()}")
+        logger.trace("New issues to add: ${existingIssueEntites.second.count()}")
+
+        if (existingIssueEntites.second.isNotEmpty()) {
+            // TODO add new issues
+
+        } else {
+            logger.info("No new issues were found, skipping update")
         }
     }
 
