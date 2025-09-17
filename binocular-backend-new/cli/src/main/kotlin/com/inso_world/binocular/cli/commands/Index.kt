@@ -56,6 +56,38 @@ open class Index(
         logger.trace("<<< index(owner: $repoOwner, name: $repoName)")
     }
 
+    @Command(command = ["issues"], description = "Index issues from ITS")
+    open fun issues(
+        @Option(
+            longNames = ["repo_owner"],
+            shortNames = ['o'],
+            required = true,
+            description = "Owner of the repository on GitHub."
+        ) repoOwner: String,
+        @Option(
+            longNames = ["repo_name"],
+            shortNames = ['r'],
+            required = true,
+            description = "Name of the repository on GitHub."
+        ) repoName: String,
+        @Option(
+            longNames = ["project_name"],
+            shortNames = ['n'],
+            required = true,
+            description = "Custom name of the project.",
+        ) projectName: String,
+    ) {
+        logger.trace(">>> index(owner: $repoOwner, name: $repoName)")
+        logger.debug("Project '$projectName'")
+
+        // get or create the project to index into
+        val project = this.projectService.getOrCreateProject(projectName)
+
+        // TODO the indexing is not done yet
+        itsService.indexIssuesFromGitHub(repoOwner, repoName, project)
+        logger.trace("<<< index(owner: $repoOwner, name: $repoName)")
+    }
+
     @Command(command = ["commits"])
     open fun commits(
         @Option(longNames = ["repo_path"], required = false) repoPath: String?,
