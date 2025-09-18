@@ -51,9 +51,14 @@ internal data class ProjectEntity(
 //        pm.projects.add(this)
 //    }
 
-    fun addIssue(e: IssueEntity) {
-        this.issues.add(e)
-        e.project = this
+    fun addIssue(issue: IssueEntity): Boolean {
+        if (issue.project != null && issue.project != this) {
+            throw IllegalArgumentException("Trying to add an issue where project is another project")
+        }
+
+        return this.issues.add(issue).also { added ->
+            if (added) issue.project = this
+        }
     }
 
     override fun toString(): String = "Project(id=$id, name=$name, description=$description, repo=$repo)"
