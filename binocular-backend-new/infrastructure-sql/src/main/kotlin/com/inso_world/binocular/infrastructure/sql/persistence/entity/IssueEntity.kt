@@ -53,8 +53,13 @@ internal data class IssueEntity(
 // @OneToMany(mappedBy = "issue", cascade = [CascadeType.ALL], orphanRemoval = true)
 // var mentions: MutableList<MentionEntity> = mutableListOf()
 
- @ManyToMany(mappedBy = "issues")
- var accounts: MutableList<AccountEntity> = mutableListOf(),
+    @ManyToMany
+    @JoinTable(
+        name = "issue_account_connections",
+        joinColumns = [JoinColumn(name = "issue_id")],
+        inverseJoinColumns = [JoinColumn(name = "account_id")],
+    )
+    var accounts: MutableList<AccountEntity> = mutableListOf(),
 
 // @ManyToMany
 // @JoinTable(
@@ -169,7 +174,7 @@ internal data class IssueEntity(
 //        labels = getDomainLabels(),
 //        mentions = getDomainMentions(),
         // These relationships will be populated by the mapper
-        accounts = emptyList(),
+//        accounts = emptyList(),
         commits = emptyList(),
         milestones = emptyList(),
         notes = emptyList(),

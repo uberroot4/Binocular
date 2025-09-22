@@ -38,12 +38,7 @@ internal data class AccountEntity(
     var avatarUrl: String? = null,
     var url: String? = null,
 
-    @ManyToMany
-    @JoinTable(
-        name = "issue_account_connections",
-        joinColumns = [JoinColumn(name = "account_id")],
-        inverseJoinColumns = [JoinColumn(name = "issue_id")],
-    )
+    @ManyToMany(mappedBy = "accounts")
     var issues: MutableList<IssueEntity> = mutableListOf(),
 
     //    @ManyToMany
