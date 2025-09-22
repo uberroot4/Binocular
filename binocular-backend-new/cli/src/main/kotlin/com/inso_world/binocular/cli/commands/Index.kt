@@ -27,6 +27,7 @@ open class Index(
         BinocularFfi().hello()
     }
 
+    // this is just to test the account indexing as accounts should be indexed together with issues
     @Command(command = ["accounts"], description = "Index accounts from ITS")
     open fun accounts(
         @Option(
@@ -51,7 +52,7 @@ open class Index(
         logger.trace(">>> index(owner: $repoOwner, name: $repoName)")
         logger.debug("Project '$projectName'")
         val project = this.projectService.getOrCreateProject(projectName)
-        // TODO index accounts into the right project
+        // warning: accounts are not indexed into a project
         itsService.indexAccountsFromGitHub(repoOwner, repoName, project).block()
         logger.trace("<<< index(owner: $repoOwner, name: $repoName)")
     }

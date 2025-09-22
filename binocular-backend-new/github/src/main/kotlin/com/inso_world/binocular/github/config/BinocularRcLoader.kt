@@ -6,10 +6,10 @@ import org.springframework.stereotype.Component
 import java.io.File
 import java.io.FileNotFoundException
 
-// this is currently just to get the service working with the token from the .binocularrc json, possibly not optimal
+// this is currently just to get the service working with the token from the .binocularrc json, not optimal
 // necessary data classes have just been dumped into this class for now
-// unsure if the config approach via binocularrc json is the optimal solution for the new backend
-// TODO edit this
+// config via binocularrc file is not optimal for new backend, should instead be solved via yaml files
+// TODO create github.yaml
 
 /**
  * Component responsible for locating and parsing the `.binocularrc` configuration file.

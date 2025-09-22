@@ -112,7 +112,7 @@ class RepositoryService {
     ): Repository {
         val find = this.findRepo(gitDir)
         if (find == null) {
-            logger.info("Repository does not exists, creating new repository")
+            logger.info("Repository does not exist, creating new repository")
             return this.repositoryPort.create(
                 Repository(
                     id = null,
