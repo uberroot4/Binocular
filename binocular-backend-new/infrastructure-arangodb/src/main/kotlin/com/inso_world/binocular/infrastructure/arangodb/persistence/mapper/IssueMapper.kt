@@ -76,12 +76,13 @@ class IssueMapper
                 state = entity.state,
                 webUrl = entity.webUrl,
                 mentions = entity.mentions,
-                accounts =
-                    proxyFactory.createLazyList {
-                        (entity.accounts ?: emptyList()).map { accountEntity ->
-                            accountMapper.toDomain(accountEntity)
-                        }
-                    },
+                // TODO does not work anymore
+//                accounts =
+//                    proxyFactory.createLazyList {
+//                        (entity.accounts ?: emptyList()).map { accountEntity ->
+//                            accountMapper.toDomain(accountEntity)
+//                        }
+//                    },
                 commits =
                     proxyFactory.createLazyList {
                         (entity.commits ?: emptyList()).map { commitEntity ->

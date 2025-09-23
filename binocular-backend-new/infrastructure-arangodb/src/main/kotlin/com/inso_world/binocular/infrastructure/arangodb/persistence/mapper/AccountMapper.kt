@@ -48,12 +48,13 @@ class AccountMapper
                 name = entity.name,
                 avatarUrl = entity.avatarUrl,
                 url = entity.url,
-                issues =
-                    proxyFactory.createLazyList {
-                        (entity.issues ?: emptyList()).map { issueEntity ->
-                            issueMapper.toDomain(issueEntity)
-                        }
-                    },
+                // TODO does not work anymore
+//                issues =
+//                    proxyFactory.createLazyList {
+//                        (entity.issues ?: emptyList()).map { issueEntity ->
+//                            issueMapper.toDomain(issueEntity)
+//                        }
+//                    },
                 mergeRequests =
                     proxyFactory.createLazyList {
                         (entity.mergeRequests ?: emptyList()).map { mergeRequestEntity ->

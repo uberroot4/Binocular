@@ -30,6 +30,7 @@ internal class ProjectMapper
             return p
         }
 
+        // TODO accounts for project should be mapped based on issues in project
         fun toDomain(entity: ProjectEntity): Project {
             val id = entity.id ?: throw IllegalStateException("Entity ID cannot be null")
 

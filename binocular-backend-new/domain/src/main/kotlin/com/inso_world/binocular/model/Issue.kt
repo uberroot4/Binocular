@@ -20,13 +20,30 @@ data class Issue(
     var webUrl: String? = null,
     var mentions: List<Mention> = emptyList(),
     // Relationships
-    val project: Project? = null,
-    var accounts: List<Account> = emptyList(),
+    var project: Project? = null,
+    // var accounts: List<Account> = emptyList(),
     var commits: List<Commit> = emptyList(),
     var milestones: List<Milestone> = emptyList(),
     var notes: List<Note> = emptyList(),
     var users: List<User> = emptyList(),
-)
+) {
+    private val _accounts: MutableSet<Account> = mutableSetOf()
+
+    val accounts: MutableSet<Account> =
+        object: MutableSet<Account> by _accounts {
+            override fun add(element: Account): Boolean {
+                val added = _accounts.add(element)
+                if (added) {
+                    element.issues.add(this@Issue)
+                }
+                return added
+            }
+        }
+
+    override fun toString(): String {
+        return "Issue(no=${iid.toString()}, title=$title, accounts=${accounts.map { it.format() }}"
+    }
+}
 
 data class Mention(
     var commit: String? = null,

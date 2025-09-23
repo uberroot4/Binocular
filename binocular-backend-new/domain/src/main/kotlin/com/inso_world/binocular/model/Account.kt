@@ -20,10 +20,23 @@ data class Account(
     var avatarUrl: String? = null,
     var url: String? = null,
     // Relationships
-    var issues: List<Issue> = emptyList(),
+    //var issues: List<Issue> = emptyList(),
     var mergeRequests: List<MergeRequest> = emptyList(),
     var notes: List<Note> = emptyList(),
 ) {
+    private val _issues: MutableSet<Issue> = mutableSetOf()
+
+    val issues: MutableSet<Issue> =
+        object: MutableSet<Issue> by _issues {
+            override fun add(element: Issue): Boolean {
+                val added = _issues.add(element)
+                if (added) {
+                    element.accounts.add(this@Account)
+                }
+                return added
+            }
+        }
+
     fun uniqueKey(): String {
         return "${this.platform}:${this.gid}"
     }
@@ -41,6 +54,11 @@ data class Account(
     }
 
     override fun hashCode(): Int = Objects.hashCode("${this.platform}:${this.gid}")
+
+    fun format(): String {
+        return "Account(id=$gid, login=$login, name=$name)"
+    }
+
 }
 
 enum class Platform {

@@ -61,7 +61,7 @@ class ItsService(
         logger.debug("Found ${ issueIds.size } issues from GitHub for $owner/$repo")
 
         // TODO check what is really needed for this func
-        this.projectService.addIssues(itsGitHubIssues, project)
+        this.projectService.addIssues(itsGitHubIssues, project, repo, owner)
 
         logger.trace("<<< indexIssuesFromGitHub({}, {}, {})", owner, repo, project)
     }
