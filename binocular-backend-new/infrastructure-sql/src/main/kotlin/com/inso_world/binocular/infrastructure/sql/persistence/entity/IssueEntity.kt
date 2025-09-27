@@ -90,7 +90,7 @@ internal data class IssueEntity(
         inverseJoinColumns = [JoinColumn(name = "user_id")],
     )
     var users: MutableList<UserEntity> = mutableListOf(),
-) {
+) : AbstractEntity() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -111,7 +111,9 @@ internal data class IssueEntity(
         return true
     }
 
-    override fun hashCode(): Int = Objects.hash(id, iid, title, description, createdAt, closedAt, updatedAt, state, webUrl, users)
+    override fun uniqueKey(): String = this.gid
+
+    override fun hashCode(): Int = Objects.hash(gid)
 //    /**
 //     * Gets the mentions as domain model mentions
 //     */
