@@ -171,8 +171,3 @@ data class Commit(
     override fun toString(): String =
         "Commit(id=$id, sha='$sha', authorDateTime=$authorDateTime, commitDateTime=$commitDateTime, message=$message, webUrl=$webUrl, stats=$stats, author=${author?.name}, committer=${committer?.name}, repositoryId=${repository?.id})"
 }
-
-data class Stats(
-    var additions: Long,
-    var deletions: Long,
-)

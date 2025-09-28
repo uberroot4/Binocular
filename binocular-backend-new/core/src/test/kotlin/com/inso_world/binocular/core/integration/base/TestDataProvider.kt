@@ -3,6 +3,7 @@ package com.inso_world.binocular.core.integration.base
 import com.inso_world.binocular.model.Account
 import com.inso_world.binocular.model.Branch
 import com.inso_world.binocular.model.Build
+import com.inso_world.binocular.model.Job
 import com.inso_world.binocular.model.Commit
 import com.inso_world.binocular.model.File
 import com.inso_world.binocular.model.Issue
@@ -97,7 +98,7 @@ object TestDataProvider {
                 LocalDateTime.now(),
                 120,
                 listOf(
-                    Build.Job(
+                    Job(
                         "job1",
                         "test",
                         "success",
@@ -124,7 +125,7 @@ object TestDataProvider {
                 LocalDateTime.now(),
                 180,
                 listOf(
-                    Build.Job(
+                    Job(
                         "job2",
                         "build",
                         "failed",
