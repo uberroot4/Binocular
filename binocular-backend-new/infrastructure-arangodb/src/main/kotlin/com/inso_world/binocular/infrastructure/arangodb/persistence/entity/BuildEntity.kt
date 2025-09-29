@@ -26,13 +26,13 @@ data class BuildEntity(
     var finishedAt: Date? = null,
     var committedAt: Date? = null,
     var duration: Int? = null,
-    var jobs: List<Job> = emptyList(),
+    var jobs: List<JobEntity> = emptyList(),
     var webUrl: String? = null,
     @Relations(
         edges = [CommitBuildConnectionEntity::class],
         lazy = true,
         maxDepth = 1,
-        direction = Relations.Direction.INBOUND,
+        direction = Relations.Direction.OUTBOUND,
     )
     var commits: List<CommitEntity> = emptyList(),
 )
