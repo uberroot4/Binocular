@@ -6,6 +6,7 @@ import com.inso_world.binocular.model.Job
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.util.Date
 
 @Component
 class JobMapper
@@ -20,8 +21,8 @@ class JobMapper
                 name = domain.name,
                 status = domain.status,
                 stage = domain.stage,
-                createdAt = domain.createdAt?.let { LocalDateTime.from(it.toInstant(ZoneOffset.UTC)) },
-                finishedAt = domain.finishedAt?.let { LocalDateTime.from(it.toInstant(ZoneOffset.UTC)) },
+                createdAt = domain.createdAt?.let { Date.from(it.toInstant(ZoneOffset.UTC)) },
+                finishedAt = domain.finishedAt?.let { Date.from(it.toInstant(ZoneOffset.UTC)) },
                 webUrl = domain.webUrl
             )
 
@@ -33,8 +34,12 @@ class JobMapper
                     name = entity.name,
                     status = entity.status,
                     stage = entity.stage,
-                    createdAt = entity.createdAt?.let { LocalDateTime.from(it.toInstant(ZoneOffset.UTC)) },
-                    finishedAt = entity.finishedAt?.let { LocalDateTime.from(it.toInstant(ZoneOffset.UTC)) },
+                    createdAt = entity.createdAt?.toInstant()
+                        ?.atZone(ZoneOffset.UTC)
+                        ?.toLocalDateTime(),
+                    finishedAt = entity.finishedAt?.toInstant()
+                        ?.atZone(ZoneOffset.UTC)
+                        ?.toLocalDateTime(),
                     webUrl = entity.webUrl
                 )
             return cmt

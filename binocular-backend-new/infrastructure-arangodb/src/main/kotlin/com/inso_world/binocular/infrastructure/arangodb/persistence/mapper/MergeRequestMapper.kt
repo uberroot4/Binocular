@@ -60,7 +60,7 @@ class MergeRequestMapper
                 webUrl = entity.webUrl,
                 mentions = (entity.mentions).map { mentionEntity ->
                     mentionMapper.toDomain(mentionEntity)
-                },
+                    },
                 accounts =
                     proxyFactory.createLazyList {
                         (entity.accounts ?: emptyList()).map { accountEntity ->

@@ -17,8 +17,7 @@ constructor(
     override fun toEntity(domain: Mention): MentionEntity =
         MentionEntity(
             commit = domain.commit,
-            createdAt = domain.createdAt?.let {
-                Date.from(it.toInstant(ZoneOffset.UTC)) },
+            createdAt = domain.createdAt?.let { Date.from(it.toInstant(ZoneOffset.UTC)) },
             closes = domain.closes
         )
 

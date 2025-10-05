@@ -1,6 +1,7 @@
 package com.inso_world.binocular.infrastructure.arangodb.persistence.entity
 
-import java.time.LocalDateTime
+import java.util.Date
+
 
 /**
  * Job entity for ArangoDB based on the domain model.
@@ -10,7 +11,7 @@ class JobEntity (
     var name: String? = null,
     var status: String? = null,
     var stage: String? = null,
-    var createdAt: LocalDateTime? = null,
-    var finishedAt: LocalDateTime? = null,
+    var createdAt: Date? = null,
+    var finishedAt: Date? = null,
     var webUrl: String? = null,
 )
