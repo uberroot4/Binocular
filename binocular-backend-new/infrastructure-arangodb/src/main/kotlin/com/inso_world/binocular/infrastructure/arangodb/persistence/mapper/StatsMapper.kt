@@ -20,12 +20,10 @@ class StatsMapper
             )
 
         //TODO: add java documentation
-        override fun toDomain(entity: StatsEntity): Stats {
-            val cmt =
-                Stats(
-                    additions = entity.additions,
-                    deletions = entity.deletions
-                )
-            return cmt
-        }
+        override fun toDomain(entity: StatsEntity): Stats =
+            Stats(
+                additions = entity.additions,
+                deletions = entity.deletions
+            )
+
     }

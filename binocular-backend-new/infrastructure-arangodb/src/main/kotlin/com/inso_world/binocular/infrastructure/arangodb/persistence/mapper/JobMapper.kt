@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.Date
-
+//TODO: add java documentation
 @Component
 class JobMapper
     constructor(
@@ -26,23 +26,21 @@ class JobMapper
                 webUrl = domain.webUrl
             )
 
-        //TODO: add java documentation
-        override fun toDomain(entity: JobEntity): Job {
-            val cmt =
-                Job(
-                    id = entity.id,
-                    name = entity.name,
-                    status = entity.status,
-                    stage = entity.stage,
-                    createdAt = entity.createdAt?.toInstant()
-                        ?.atZone(ZoneOffset.UTC)
-                        ?.toLocalDateTime(),
-                    finishedAt = entity.finishedAt?.toInstant()
-                        ?.atZone(ZoneOffset.UTC)
-                        ?.toLocalDateTime(),
-                    webUrl = entity.webUrl
-                )
-            return cmt
-        }
+
+        override fun toDomain(entity: JobEntity): Job =
+            Job(
+                id = entity.id,
+                name = entity.name,
+                status = entity.status,
+                stage = entity.stage,
+                createdAt = entity.createdAt?.toInstant()
+                    ?.atZone(ZoneOffset.UTC)
+                    ?.toLocalDateTime(),
+                finishedAt = entity.finishedAt?.toInstant()
+                    ?.atZone(ZoneOffset.UTC)
+                    ?.toLocalDateTime(),
+                webUrl = entity.webUrl
+            )
+
     }
 

@@ -1,11 +1,12 @@
 package com.inso_world.binocular.infrastructure.arangodb.persistence.entity
 
+import com.arangodb.springframework.annotation.Document
 import java.util.Date
-
 
 /**
  * Job entity for ArangoDB based on the domain model.
  */
+@Document("job")
 class JobEntity (
     var id: String? = null,
     var name: String? = null,

@@ -22,15 +22,13 @@ constructor(
         )
 
     //TODO: add java documentation
-    override fun toDomain(entity: MentionEntity): Mention {
-        val cmt =
-            Mention(
-                commit = entity.commit,
-                createdAt = entity.createdAt?.toInstant()
-                    ?.atZone(ZoneOffset.UTC)
-                    ?.toLocalDateTime(),
-                closes = entity.closes
-            )
-        return cmt
-    }
+    override fun toDomain(entity: MentionEntity): Mention =
+        Mention(
+            commit = entity.commit,
+            createdAt = entity.createdAt?.toInstant()
+                ?.atZone(ZoneOffset.UTC)
+                ?.toLocalDateTime(),
+            closes = entity.closes
+        )
+
 }
