@@ -6,7 +6,7 @@ import java.util.Date
 /**
  * Job entity for ArangoDB based on the domain model.
  */
-@Document("job")
+@Document("jobs")
 class JobEntity (
     var id: String? = null,
     var name: String? = null,

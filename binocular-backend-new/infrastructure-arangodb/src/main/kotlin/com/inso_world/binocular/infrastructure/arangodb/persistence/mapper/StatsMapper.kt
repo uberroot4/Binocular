@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component
 class StatsMapper
     constructor(
     ) : EntityMapper<Stats, StatsEntity> {
+
         /**
          * Converts a domain Job to an ArangoDB JobEntity
          */

@@ -6,7 +6,7 @@ import java.util.Date
 /**
  * Mention entity for ArangoDB based on the domain model.
  */
-@Document("mention")
+@Document("mentions")
 data class MentionEntity(
     var commit: String? = null,
     var createdAt: Date? = null,
