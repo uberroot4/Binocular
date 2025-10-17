@@ -15,6 +15,7 @@ import CommitFileStakeholderConnection from '../../models/CommitFileStakeholderC
 import BranchFileFileConnection from '../../models/BranchFileFileConnection.js';
 import Stakeholder from '../../models/Stakeholder.js';
 import { fixUTF8 } from '../../utils/utils';
+import { runVulnerabilityEnrichment } from '../../vuln-metrics/pipelines/vulnerabilityPipeline';
 let fileRenameBranches;
 
 class GitIndexer {
@@ -108,6 +109,8 @@ class GitIndexer {
           .bind(this)(commit, currentBranch)
           .catch({ stop: true }, () => null);
       }
+
+      await runVulnerabilityEnrichment(this.repo, currentBranch);
 
       //create branch-file connections
       //in the process, check which files have been renamed and store these in the branch-file-file connection

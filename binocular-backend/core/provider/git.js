@@ -252,6 +252,56 @@ class Repository {
     });
   }
 
+  /**
+   * Returns all commits of a branch by following only the first parent chain.
+   * This replicates `git rev-list --first-parent <branch>`, and is useful
+   * to track linear history (ignores side branches).
+   *
+   * @param {string} branchName - The name of the branch (e.g., 'main')
+   * @returns {Promise<Array>} - Array of commit objects from oldest to newest
+   */
+  async getFirstParentCommits(branchName) {
+    if (!branchName || typeof branchName !== 'string') {
+      throw new Error('branchName must be a non-empty string');
+    }
+
+    const commits = [];
+    const cwd = this.currPath || '.';
+    const visited = new Set();
+
+    let ref;
+
+    try {
+      ref = await isomorphicGit.resolveRef({ fs, dir: cwd, ref: branchName });
+    } catch (err) {
+      throw new Error(`Branch '${branchName}' not found in repo at ${cwd}`);
+    }
+
+    while (ref && !visited.has(ref)) {
+      visited.add(ref);
+
+      const commit = await isomorphicGit.readCommit({ fs, dir: cwd, oid: ref });
+      commits.unshift(commit); // oldest-to-newest
+
+      const parents = commit.commit.parent;
+      if (!parents || parents.length === 0) break;
+
+      ref = parents[0]; // first parent only
+    }
+
+    return commits;
+  }
+
+  async readFileAtCommit(filepath, commitSha) {
+    const { blob } = await isomorphicGit.readBlob({
+      fs,
+      dir: this.currPath || '.',
+      oid: commitSha,
+      filepath,
+    });
+    return new TextDecoder().decode(blob);
+  }
+
   static fromPath(currPath) {
     return Promise.resolve(isomorphicGit.init({ fs, dir: currPath || '.' })).then(() => {
       return Promise.resolve(new Repository(path.resolve(currPath + '/.git'), currPath || '.'));

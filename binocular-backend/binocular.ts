@@ -73,6 +73,7 @@ import its from './indexers/its';
 import ci from './indexers/ci';
 import Repository from './core/provider/git';
 import chalk from 'chalk';
+import VersionChangeEvent from "./models/VersionChangeEvent";
 
 cli.parse(
   (targetPath, options) => {
@@ -601,6 +602,7 @@ function runBackend() {
           BranchFileConnection.ensureCollection(),
           BranchFileFileConnection.ensureCollection(),
           CommitFileStakeholderConnection.ensureCollection(),
+          VersionChangeEvent.ensureCollection(),
         ]);
       });
   }
