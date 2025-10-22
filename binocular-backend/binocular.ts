@@ -73,7 +73,10 @@ import its from './indexers/its';
 import ci from './indexers/ci';
 import Repository from './core/provider/git';
 import chalk from 'chalk';
-import VersionChangeEvent from "./models/VersionChangeEvent";
+import VersionChangeEvent from './models/VersionChangeEvent';
+import Vulnerability from './models/Vulnerability';
+import VersionChangeEventVulnerabilityConnection from './models/VersionChangeEventVulnerabilityConnection';
+import VulnerabilityAgeBucket from './models/VulnerabilityAgeBucket';
 
 cli.parse(
   (targetPath, options) => {
@@ -603,6 +606,9 @@ function runBackend() {
           BranchFileFileConnection.ensureCollection(),
           CommitFileStakeholderConnection.ensureCollection(),
           VersionChangeEvent.ensureCollection(),
+          Vulnerability.ensureCollection(),
+          VersionChangeEventVulnerabilityConnection.ensureCollection(),
+          VulnerabilityAgeBucket.ensureCollection(),
         ]);
       });
   }

@@ -21,8 +21,8 @@ export async function persistVersionChanges(repo, branchName) {
 
     let prevPkgStr, currPkgStr;
     try {
-      prevPkgStr = await repo.readFileAtCommit('package.json', prevSha);
-      currPkgStr = await repo.readFileAtCommit('package.json', currSha);
+      prevPkgStr = await repo.readFileAtCommit('package-lock.json', prevSha);
+      currPkgStr = await repo.readFileAtCommit('package-lock.json', currSha);
     } catch (err) {
       log(`Skipping commit ${currSha}: could not read package.json`);
       continue;
@@ -45,23 +45,34 @@ export async function persistVersionChanges(repo, branchName) {
         oldVersion: change.oldVersion,
         newVersion: change.newVersion,
         sourceType: 'commit',
+        direct: change.direct,
+        wasDirect: change.wasDirect,
       });
 
-      log(`Detected version change: ${change.name} ${change.oldVersion || '∅'} → ${change.newVersion} at ${currSha}`);
+      console.log(`Detected version change: ${change.name} ${change.oldVersion || '∅'} → ${change.newVersion} at ${currSha}`);
     }
   }
 
   log(`Version change detection completed for branch "${branchName}"`);
 }
 
-function extractDependencies(pkgStr) {
+function extractDependencies(pkgLockStr) {
   try {
-    const pkg = JSON.parse(pkgStr);
-    return {
-      ...pkg.dependencies,
-      ...pkg.devDependencies,
-      ...pkg.peerDependencies,
+    const lock = JSON.parse(pkgLockStr);
+    const deps = {};
+
+    const walk = (node, isRoot = false) => {
+      for (const [name, info] of Object.entries(node.dependencies || {})) {
+        deps[name] = {
+          version: info.version || null,
+          direct: isRoot,
+        };
+        walk(info, false);
+      }
     };
+
+    walk(lock, true);
+    return deps;
   } catch {
     return {};
   }
@@ -70,20 +81,42 @@ function extractDependencies(pkgStr) {
 function diffDependencies(prevDeps, currDeps) {
   const changes = [];
 
-  // additions & updates
-  for (const [name, newVersion] of Object.entries(currDeps)) {
-    const oldVersion = prevDeps[name];
-    if (!oldVersion) {
-      changes.push({ name, oldVersion: null, newVersion });
-    } else if (oldVersion !== newVersion) {
-      changes.push({ name, oldVersion, newVersion });
+  for (const [name, currInfo] of Object.entries(currDeps)) {
+    const prevInfo = prevDeps[name];
+
+    // Newly added dependency
+    if (!prevInfo) {
+      changes.push({
+        name,
+        oldVersion: null,
+        newVersion: currInfo.version,
+        wasDirect: false,
+        isDirect: currInfo.direct,
+      });
+      continue;
+    }
+
+    // Version or directness changed
+    if (prevInfo.version !== currInfo.version || prevInfo.direct !== currInfo.direct) {
+      changes.push({
+        name,
+        oldVersion: prevInfo.version,
+        newVersion: currInfo.version,
+        wasDirect: prevInfo.direct,
+        isDirect: currInfo.direct,
+      });
     }
   }
 
-  // removals
-  for (const name of Object.keys(prevDeps)) {
+  for (const [name, prevInfo] of Object.entries(prevDeps)) {
     if (!(name in currDeps)) {
-      changes.push({ name, oldVersion: prevDeps[name], newVersion: null });
+      changes.push({
+        name,
+        oldVersion: prevInfo.version,
+        newVersion: null,
+        wasDirect: prevInfo.direct,
+        isDirect: false,
+      });
     }
   }
 

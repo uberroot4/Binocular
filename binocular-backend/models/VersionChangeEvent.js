@@ -14,6 +14,8 @@ const VersionChangeEvent = Model.define('VersionChangeEvent', {
     'library',
     'oldVersion',
     'newVersion',
+    'direct',
+    'wasDirect',
     'sourceType', // 'commit' | 'merge' | 'cherry-pick' | 'rebase'
     /**
      * Describes how this version change was introduced into the current branch:

@@ -4,26 +4,27 @@ import { retrieveVulnerabilityInfo } from './retrieveVulnerabilityInfo.js';
 import Vulnerability from './../../models/Vulnerability.js';
 import VersionChangeEventVulnerabilityConnection from './../../models/VersionChangeEventVulnerabilityConnection.js';
 import VersionChangeEvent from './../../models/VersionChangeEvent.js';
+import semver from 'semver';
 
 export async function enrichVersionChanges() {
   console.log('--- Enrichment process started ---');
 
-  // Fetch all version change events
+  // 1. Load all version change events
   const events = await VersionChangeEvent.findAll();
   if (!events.length) {
     console.log('No version change events found.');
     return;
   }
 
-  // Extract unique libraries
+  // 2. Extract unique libraries
   const libraries = [...new Set(events.map((e) => e.library).filter(Boolean))];
-  console.log(`Processing ${libraries.length} unique libraries out of ${events.length} events...`);
+  console.log(`Processing ${libraries.length} unique libraries across ${events.length} events...`);
 
-  // Fetch all vulnerabilities in one batch using OSV
+  // 3. Retrieve vulnerabilities
   let vulnerabilities = [];
   try {
     vulnerabilities = await retrieveVulnerabilityInfo(libraries);
-    console.log(`Retrieved ${vulnerabilities.length} vulnerabilities from OSV.`);
+    console.log(`Retrieved vulnerabilities for ${vulnerabilities.length} libraries.`);
   } catch (error) {
     console.error('Failed to retrieve vulnerabilities:', error.message);
     return;
@@ -34,26 +35,35 @@ export async function enrichVersionChanges() {
     return;
   }
 
-  // Persist vulnerabilities and edges
-  const vulnsByLib = groupBy(vulnerabilities, 'library');
-
-  for (const [library, vulns] of Object.entries(vulnsByLib)) {
+  // 4. Iterate per library and connect relevant vulnerabilities
+  for (const { library, vulnerabilities: vulns } of vulnerabilities) {
     const relatedEvents = events.filter((e) => e.library === library);
     if (!relatedEvents.length) continue;
 
     console.log(`Enriching ${library} (${vulns.length} vulnerabilities, ${relatedEvents.length} events)...`);
 
     for (const v of vulns) {
-      if (!v.vulId) continue;
+      if (!v.vulnId) continue;
 
-      // Save vulnerability (ignore duplicates)
-      await Vulnerability.persist(v);
+      const [storedVuln] = await Vulnerability.persist(v);
 
-      // Create edges
       for (const e of relatedEvents) {
+        const wasVulnerable = isVersionAffected(e.oldVersion, v);
+        const nowVulnerable = isVersionAffected(e.newVersion, v);
+
+        // Skip if both states are same (no transition)
+        if (wasVulnerable === nowVulnerable) continue;
+
+        const relation = nowVulnerable ? 'AFFECTS' : 'FIXES';
+
         await VersionChangeEventVulnerabilityConnection.ensure(
-          { relation: 'AFFECTS', createdAt: new Date().toISOString() },
-          { from: e, to: v },
+          {
+            relation,
+            libraryVersionOld: e.oldVersion,
+            libraryVersionNew: e.newVersion,
+            createdAt: new Date().toISOString(),
+          },
+          { from: e, to: storedVuln },
         );
       }
     }
@@ -62,11 +72,36 @@ export async function enrichVersionChanges() {
   console.log('--- Enrichment completed ---');
 }
 
-function groupBy(arr, key) {
-  return arr.reduce((acc, item) => {
-    const group = item[key];
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(item);
-    return acc;
-  }, {});
+/**
+ * Determine if a given version falls within the vulnerable versions of a vulnerability.
+ */
+function isVersionAffected(version, vuln) {
+  if (!version || !vuln.affectedVersions) return false;
+
+  try {
+    const affected = Array.isArray(vuln.affectedVersions) ? vuln.affectedVersions.filter((v) => typeof v === 'string') : [];
+
+    if (!affected.length) return false;
+
+    // Direct match first
+    if (affected.includes(version)) return true;
+
+    // Handle semver ranges
+    for (const range of affected) {
+      if (typeof range === 'string' && /[<>]=?/.test(range)) {
+        try {
+          if (semver.satisfies(version, range, { includePrerelease: true })) {
+            return true;
+          }
+        } catch {
+          // ignore invalid semver range
+        }
+      }
+    }
+
+    return false;
+  } catch (err) {
+    console.warn(`Error comparing version ${version} to affected set for ${vuln.vulnId}: ${err.message}`);
+    return false;
+  }
 }
