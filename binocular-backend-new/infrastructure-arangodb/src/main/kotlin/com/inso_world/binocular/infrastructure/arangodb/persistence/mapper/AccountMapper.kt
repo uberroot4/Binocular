@@ -3,7 +3,9 @@ package com.inso_world.binocular.infrastructure.arangodb.persistence.mapper
 import com.inso_world.binocular.core.persistence.mapper.EntityMapper
 import com.inso_world.binocular.core.persistence.proxy.RelationshipProxyFactory
 import com.inso_world.binocular.infrastructure.arangodb.persistence.entity.AccountEntity
+import com.inso_world.binocular.infrastructure.arangodb.persistence.entity.PlatformEntity
 import com.inso_world.binocular.model.Account
+import com.inso_world.binocular.model.Platform
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
@@ -23,7 +25,7 @@ class AccountMapper
         override fun toEntity(domain: Account): AccountEntity =
             AccountEntity(
                 id = domain.id,
-                platform = domain.platform,
+                platform = domain.platform?.let { toPlatformEntity(it) },
                 login = domain.login,
                 name = domain.name,
                 avatarUrl = domain.avatarUrl,
@@ -41,7 +43,7 @@ class AccountMapper
         override fun toDomain(entity: AccountEntity): Account =
             Account(
                 id = entity.id,
-                platform = entity.platform,
+                platform = entity.platform?.let { toPlatform(it) },
                 login = entity.login,
                 name = entity.name,
                 avatarUrl = entity.avatarUrl,
@@ -70,4 +72,22 @@ class AccountMapper
          * Converts a list of ArangoDB AccountEntity objects to a list of domain Account objects
          */
         override fun toDomainList(entities: Iterable<AccountEntity>): List<Account> = entities.map { toDomain(it) }
+
+        private fun toPlatformEntity(platform: Platform): PlatformEntity? {
+            if (platform == Platform.GitHub) {
+                return PlatformEntity.GitHub
+            } else if (platform == Platform.GitLab) {
+                return PlatformEntity.GitLab
+            }
+            return null
+        }
+
+        private fun toPlatform(platformEntity: PlatformEntity): Platform? {
+            if (platformEntity == PlatformEntity.GitHub) {
+                return Platform.GitHub
+            } else if (platformEntity == PlatformEntity.GitLab) {
+                return Platform.GitLab
+            }
+            return null
+        }
     }
