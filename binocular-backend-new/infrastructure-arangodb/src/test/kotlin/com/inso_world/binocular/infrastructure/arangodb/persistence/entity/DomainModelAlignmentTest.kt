@@ -24,6 +24,7 @@ import java.lang.reflect.ParameterizedType
 // and warn if there are extra properties or relations
 class DomainModelAlignmentTest {
 
+    // Mapped pairs are based of off mappers
     private val mappedClasses = mapOf(
         Account::class.java to AccountEntity::class.java,
         Branch::class.java to BranchEntity::class.java,
@@ -42,9 +43,13 @@ class DomainModelAlignmentTest {
         User::class.java to UserEntity::class.java,
     );
 
+    // Generic method to compare properties of given entity and model classes
+    // internalModelProperties: properties that should be ignored in the comparison because they are internal to the model
+    // allowedTypePairs: map of model types to entity types that are considered equivalent
+    // mappedProperties: map of model property names to entity property names based on mapping rules
     fun `compare raw entity and model properties`(entity: Class<*>,
                                                   model: Class<*>,
-                                                  internalProperties: Set<String>,
+                                                  internalModelProperties: Set<String>,
                                                   allowedTypePairs: Map<Class<out Any>, Class<out Any>>,
                                                   mappedProperties: Map<String, String>) {
         val entityProps = entity.declaredFields.associate { it.name to it.type }
@@ -55,14 +60,14 @@ class DomainModelAlignmentTest {
             val entityPropertyName = mappedProperties[name] ?: name
             val entityType = entityProps[entityPropertyName]
 
-            if (entityType == null && name !in internalProperties) {
-                println("⚠️ $model has extra field '$name' (model type: $modelType)")
+            if (entityType == null && name !in internalModelProperties) {
+                println("⚠️ ${model.simpleName} has extra field '$name' (model type: $modelType)")
                 return@forEach
             }
 
-            val isAllowedMismatch = allowedTypePairs[modelType] == entityType
+            val isAllowedMismatch = (allowedTypePairs[modelType] == entityType) || (mappedClasses[modelType] == entityType)
             if (entityType != modelType && !isAllowedMismatch) {
-                fail("❌ Property '$name' type mismatch between $model and $entity: expected $modelType but got $entityType")
+                fail("❌ Property '$name' type mismatch between ${model.simpleName} and ${entity.simpleName}: expected $modelType but got $entityType")
             }
         }
 
@@ -71,7 +76,7 @@ class DomainModelAlignmentTest {
         for (extraField in extraFields) {
             val entityType = entityProps[extraField]
             if (extraField !in mappedProperties.values) {
-                println("️⚠️ $entity has extra field not in model: $extraField (type: $entityType)")
+                println("️⚠️ ${entity.simpleName} has extra field not in model: $extraField (type: $entityType)")
             }
         }
 
@@ -167,7 +172,7 @@ class DomainModelAlignmentTest {
     //Test that commit entity has same raw property types as commit domain model
     @Test
     fun `commit entity has same raw property types as commit model`() {
-        val internalProperties = setOf("_parents", "_children", "_branches")
+        val internalModelProperties = setOf("_parents", "_children", "_branches")
 
         val mappedProperties = mapOf(
             "commitDateTime" to "date"
@@ -175,14 +180,13 @@ class DomainModelAlignmentTest {
 
         val allowedTypePairs = mapOf(
             java.time.LocalDateTime::class.java to java.util.Date::class.java,
-            Pair(Stats::class.java, StatsEntity::class.java),
             java.util.Set::class.java to java.util.List::class.java
         )
 
         `compare raw entity and model properties`(
             CommitEntity::class.java,
             Commit::class.java,
-            internalProperties,
+            internalModelProperties,
             allowedTypePairs,
             mappedProperties
         )
@@ -262,15 +266,15 @@ class DomainModelAlignmentTest {
     //Test that issue entity has same property types as issue domain model
     @Test
     fun `user entity has same raw property types as user model`() {
-        val internalProperties = setOf("_committedCommits", "_authoredCommits")
+        val internalModelProperties = setOf("_committedCommits", "_authoredCommits")
 
         `compare raw entity and model properties`(
             UserEntity::class.java,
             User::class.java,
-            internalProperties,
+            internalModelProperties,
             emptyMap(),
             emptyMap()
-            );
+            )
     }
 
     //Test that issue entity has same edges as issue domain model
