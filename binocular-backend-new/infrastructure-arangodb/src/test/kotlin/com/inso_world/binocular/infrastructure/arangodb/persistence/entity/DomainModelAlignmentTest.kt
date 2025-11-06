@@ -21,33 +21,74 @@ import java.lang.reflect.ParameterizedType
 // and warn if there are extra properties or relations
 class DomainModelAlignmentTest {
 
-    //Test that issue entity has same property types as issue domain model
-    @Test
-    fun `issue entity has same raw property types as issue model`() {
-        val entityProps = IssueEntity::class.java.declaredFields.associate { it.name to it.type }
-        val modelProps = Issue::class.java.declaredFields.associate { it.name to it.type }
+    private val mappedClasses = mapOf(
+        Account::class.java to AccountEntity::class.java,
+        Branch::class.java to BranchEntity::class.java,
+        Build::class.java to BuildEntity::class.java,
+        Commit::class.java to CommitEntity::class.java,
+        File::class.java to FileEntity::class.java,
+        Issue::class.java to IssueEntity::class.java,
+        Job::class.java to JobEntity::class.java,
+        Mention::class.java to MentionEntity::class.java,
+        MergeRequest::class.java to MergeRequestEntity::class.java,
+        Milestone::class.java to MilestoneEntity::class.java,
+        Module::class.java to ModuleEntity::class.java,
+        Note::class.java to NoteEntity::class.java,
+        Platform::class.java to PlatformEntity::class.java,
+        Stats::class.java to StatsEntity::class.java,
+        User::class.java to UserEntity::class.java,
+    );
 
-        modelProps.forEach { (name, type) ->
-            val entityType = entityProps[name]
-            var expectedType = type
+    fun `compare raw entity and model properties`(entity: Class<*>,
+                                                  model: Class<*>,
+                                                  internalProperties: Set<String>,
+                                                  allowedTypePairs: Map<Class<out Any>, Class<out Any>>,
+                                                  mappedProperties: Map<String, String>) {
+        val entityProps = entity.declaredFields.associate { it.name to it.type }
+        val modelProps = model.declaredFields.associate { it.name to it.type }
 
-            if (type == java.time.LocalDateTime::class.java) {
-                expectedType = java.util.Date::class.java
-            }
-            if (entityType == null) {
-                println("⚠️ Issue has extra field '$name' (model type: $type)")
+        // check for matching type or allowed equivalence
+        modelProps.forEach { (name, modelType) ->
+            val entityPropertyName = mappedProperties[name] ?: name
+            val entityType = entityProps[entityPropertyName]
+
+            if (entityType == null && name !in internalProperties) {
+                println("⚠️ $model has extra field '$name' (model type: $modelType)")
                 return@forEach
             }
 
-            if (entityType != expectedType) {
-                fail("❌ Property '$name' type mismatch between Issue and IssueEntity: expected $expectedType but got $entityType")
+            val isAllowedMismatch = allowedTypePairs[modelType] == entityType
+            if (entityType != modelType && !isAllowedMismatch) {
+                fail("❌ Property '$name' type mismatch between $model and $entity: expected $modelType but got $entityType")
             }
         }
 
+        // check that entity has extra fields that are not in model
         val extraFields = entityProps.keys - modelProps.keys
         for (extraField in extraFields) {
-            println("⚠️ IssueEntity has extra field not in model: $extraField (type: ${entityProps[extraField]})")
+            val entityType = entityProps[extraField]
+            if (extraField !in mappedProperties.values) {
+                println("️⚠️ $entity has extra field not in model: $extraField (type: $entityType)")
+            }
         }
+
+    }
+
+    //Test that issue entity has same property types as issue domain model
+    @Test
+    fun `issue entity has same raw property types as issue model`() {
+
+        val allowedTypePairs = mapOf(
+            java.time.LocalDateTime::class.java to java.util.Date::class.java
+        ) as Map<Class<out Any>, Class<out Any>>
+
+        `compare raw entity and model properties`(
+            IssueEntity::class.java,
+            Issue::class.java,
+            emptySet(),
+            allowedTypePairs,
+            emptyMap()
+        )
     }
 
     //Test that issue entity has same edges as issue domain model
@@ -132,12 +173,8 @@ class DomainModelAlignmentTest {
     //Test that commit entity has same raw property types as commit domain model
     @Test
     fun `commit entity has same raw property types as commit model`() {
-        val entityProps = CommitEntity::class.java.declaredFields.associate { it.name to it.type }
-        val modelProps = Commit::class.java.declaredFields.associate { it.name to it.type }
-
         val internalProperties = setOf("_parents", "_children", "_branches")
 
-        // map of model property names to entity property names if they differ (based on mapper)
         val mappedProperties = mapOf(
             "commitDateTime" to "date"
         )
@@ -147,30 +184,14 @@ class DomainModelAlignmentTest {
             Pair(Stats::class.java, StatsEntity::class.java),
             java.util.Set::class.java to java.util.List::class.java
         )
-        // check for matching type or allowed equivalence
-        modelProps.forEach { (name, modelType) ->
-            val entityPropertyName = mappedProperties[name] ?: name
-            val entityType = entityProps[entityPropertyName]
 
-            if (entityType == null && name !in internalProperties) {
-                println("⚠️ Commit has extra field '$name' (model type: $modelType)")
-                return@forEach
-            }
-
-            val isAllowedMismatch = allowedTypePairs[modelType] == entityType
-            if (entityType != modelType && !isAllowedMismatch) {
-                fail("❌ Property '$name' type mismatch between Commit and CommitEntity: expected $modelType but got $entityType")
-            }
-        }
-
-        // check that entity has extra fields that are not in model
-        val extraFields = entityProps.keys - modelProps.keys
-        for (extraField in extraFields) {
-            val entityType = entityProps[extraField]
-            if (extraField !in mappedProperties.values) {
-                println("️⚠️ CommitEntity has extra field not in model: $extraField (type: $entityType)")
-            }
-        }
+        `compare raw entity and model properties`(
+            CommitEntity::class.java,
+            Commit::class.java,
+            internalProperties,
+            allowedTypePairs,
+            mappedProperties
+        )
     }
 
     //Test that commit entity has same edges as commit domain model
@@ -257,37 +278,15 @@ class DomainModelAlignmentTest {
     //Test that issue entity has same property types as issue domain model
     @Test
     fun `user entity has same raw property types as user model`() {
-        val entityProps = UserEntity::class.java.declaredFields.associate { it.name to it.type }
-        val modelProps = User::class.java.declaredFields.associate { it.name to it.type }
-
         val internalProperties = setOf("_committedCommits", "_authoredCommits")
 
-        //// Map of model property names to entity property names when they differ (based on mapper)
-        //val mappedProperties = mapOf(
-        //     // add mapped properties if any
-        //)
-
-        //val allowedTypePairs = mapOf(
-        //    // add allowed type pairs if any
-        //)
-
-        modelProps.forEach { (name, type) ->
-            val entityType = entityProps[name]
-
-            if (entityType == null && name !in internalProperties) {
-                println("⚠️ User has extra field '$name' (model type: $type)")
-                return@forEach
-            }
-
-            if (entityType != type && name !in internalProperties) {
-                fail("❌ Property '$name' type mismatch between User and UserEntity: expected $type but got $entityType")
-            }
-        }
-
-        val extraFields = entityProps.keys - modelProps.keys
-        for (extraField in extraFields) {
-            println("⚠️ UserEntity has extra field not in model: $extraField (type: ${entityProps[extraField]})")
-        }
+        `compare raw entity and model properties`(
+            UserEntity::class.java,
+            User::class.java,
+            internalProperties,
+            emptyMap(),
+            emptyMap()
+            );
     }
 
     //Test that issue entity has same edges as issue domain model
