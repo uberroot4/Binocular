@@ -228,4 +228,24 @@ class DomainModelAlignmentTest {
             User::class.java
         )
     }
+
+    @Test
+    fun `account entity has same raw property types as account model`() {
+
+        `compare raw entity and model properties`(
+            AccountEntity::class.java,
+            Account::class.java,
+            emptySet(),
+            emptyMap(),
+            emptyMap()
+            )
+    }
+
+    @Test
+    fun `account entity has same edges as account model`() {
+        `compare entity and model edges`(
+            AccountEntity::class.java,
+            Account::class.java
+        )
+    }
 }
