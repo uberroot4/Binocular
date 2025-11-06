@@ -82,6 +82,74 @@ class DomainModelAlignmentTest {
 
     }
 
+    fun `compare entity and model edges`(entity: Class<*>,
+                                         model: Class<*>,) {
+        val entityRelations = entity.declaredFields
+            .filter { field ->
+                val type = field.genericType
+                val isRelevant = (!(type is Class<*> && type.isPrimitive)
+                        && type != String::class.java
+                        && type != java.util.Date::class.java)
+                        && !(field.name.contains("_"))
+                isRelevant
+            }
+            .map { field -> field.name to field.genericType }
+            .toSet()
+
+        // find all fields that don't have primitive or LocalDateTime type in commit model or have names containing"_"
+        // and save their names and generic type in modelRelations
+        val modelRelations = model.declaredFields
+            .filter { field ->
+                val type = field.genericType
+                val isRelevant = (!(type is Class<*> && type.isPrimitive)
+                        && type != String::class.java
+                        && type != java.time.LocalDateTime::class.java)
+                        && !(field.name.contains("_"))
+                isRelevant
+            }
+            .map { field -> field.name to field.genericType }
+            .toSet()
+
+        // check that all model relations exist in entity relations with correct mapped types
+        modelRelations.forEach { (name, modelType) ->
+            val entityRelation = entityRelations.find { it.first == name }
+            if (entityRelation == null) {
+                // if relation does not exist, warn but do not fail
+                println("⚠️ ${model.simpleName} has extra relation (edge) through field $name to model class : $modelType.)")
+            }
+
+            if (modelType is ParameterizedType && entityRelation is ParameterizedType) {
+                val modelRaw = modelType.rawType as Class<*>
+                val entityRaw = entityRelation.rawType as Class<*>
+                val modelParam = modelType.actualTypeArguments.firstOrNull() as? Class<*>
+                val entityParam = entityRelation.actualTypeArguments.firstOrNull() as? Class<*>
+
+                // check if raw types match (List<> mapps to Set<> and vice versa)
+                val rawMatch = (modelRaw == entityRaw) || (modelRaw == Set::class.java && entityRaw == List::class.java)
+                // check if parameter type matches based on mapping (e.g. Issue → IssueEntity)
+                val paramMatch = (mappedClasses[modelParam] == entityParam) || modelParam == entityParam
+
+                if (!rawMatch || !paramMatch) {
+                    fail("❌ Edge '$name' mismatch between ${model.simpleName} and ${entity.simpleName}: expected $modelRaw<$modelParam> but got $entityRaw<$entityParam>")
+                }
+
+            } else if (modelType is Class<*> && entityRelation is Class<*>) {
+                val mappedExpected = mappedClasses[modelType]
+                if (entityRelation != mappedExpected && entityRelation != modelType) {
+                    fail("❌ Edge '$name' mismatch between ${model.simpleName} and ${entity.simpleName}: expected ${mappedExpected ?: modelType} but got $entityRelation")
+                }
+            }
+        }
+
+        // check if entity has extra relations that are not in model
+        val extraRelations = entityRelations.map { it.first }.toSet() - modelRelations.map { it.first }.toSet()
+        if (extraRelations.isNotEmpty()) {
+            for (extraRelation in extraRelations) {
+                println("⚠️ ${entity.simpleName} has extra relation (edge) through field $extraRelation to entity class : ${entityRelations.find { it.first == extraRelation }?.second}.")
+            }
+        }
+    }
+
     //Test that issue entity has same property types as issue domain model
     @Test
     fun `issue entity has same raw property types as issue model`() {
@@ -102,71 +170,9 @@ class DomainModelAlignmentTest {
     //Test that issue entity has same edges as issue domain model
     @Test
     fun `issue entity has same edges as issue model`() {
-
-        val entityRelations = IssueEntity::class.java.declaredFields
-            .filter { field ->
-                val type = field.genericType
-                val isRelevant = (!(type is Class<*> && type.isPrimitive)
-                        && type != String::class.java
-                        && type != java.util.Date::class.java)
-                        && !(field.name.contains("_"))
-                isRelevant
-            }
-            .map { field -> field.name to field.genericType }
-            .toSet()
-
-        // find all fields that don't have primitive or LocalDateTime type in commit model or have names containing"_"
-        // and save their names and generic type in modelRelations
-        val modelRelations = Issue::class.java.declaredFields
-            .filter { field ->
-                val type = field.genericType
-                val isRelevant = (!(type is Class<*> && type.isPrimitive)
-                        && type != String::class.java
-                        && type != java.time.LocalDateTime::class.java)
-                        && !(field.name.contains("_"))
-                isRelevant
-            }
-            .map { field -> field.name to field.genericType }
-            .toSet()
-
-        // check that all model relations exist in entity relations with correct mapped types
-        modelRelations.forEach { (name, modelType) ->
-            val entityRelation = entityRelations.find { it.first == name }
-            if (entityRelation == null) {
-                // if relation does not exist, warn but do not fail
-                println("⚠️ Issue has extra relation (edge) through field $name to model class : $modelType.)")
-            }
-
-            if (modelType is ParameterizedType && entityRelation is ParameterizedType) {
-                val modelRaw = modelType.rawType as Class<*>
-                val entityRaw = entityRelation.rawType as Class<*>
-                val modelParam = modelType.actualTypeArguments.firstOrNull() as? Class<*>
-                val entityParam = entityRelation.actualTypeArguments.firstOrNull() as? Class<*>
-
-                // check if raw types match (List<> mapps to Set<> and vice versa)
-                val rawMatch = (modelRaw == entityRaw) || (modelRaw == Set::class.java && entityRaw == List::class.java)
-                // check if parameter type matches based on mapping (e.g. Issue → IssueEntity)
-                val paramMatch = (mappedClasses[modelParam] == entityParam) || modelParam == entityParam
-
-                if (!rawMatch || !paramMatch) {
-                    fail("❌ Edge '$name' mismatch between Issue and IssueEntity: expected $modelRaw<$modelParam> but got $entityRaw<$entityParam>")
-                }
-
-            } else if (modelType is Class<*> && entityRelation is Class<*>) {
-                val mappedExpected = mappedClasses[modelType]
-                if (entityRelation != mappedExpected && entityRelation != modelType) {
-                    fail("❌ Edge '$name' mismatch between Issue and IssueEntity: expected ${mappedExpected ?: modelType} but got $entityRelation")
-                }
-            }
-        }
-
-        // check if entity has extra relations that are not in model
-        val extraRelations = entityRelations.map { it.first }.toSet() - modelRelations.map { it.first }.toSet()
-        if (extraRelations.isNotEmpty()) {
-            for (extraRelation in extraRelations) {
-                println("⚠️ IssueEntity has extra relation (edge) through field $extraRelation to entity class : ${entityRelations.find { it.first == extraRelation }?.second}.")
-            }
-        }
+        `compare entity and model edges`(
+            IssueEntity::class.java,
+            Issue::class.java)
     }
 
     //Test that commit entity has same raw property types as commit domain model
@@ -195,72 +201,9 @@ class DomainModelAlignmentTest {
     //Test that commit entity has same edges as commit domain model
     @Test
     fun `commit entity has same edges as commit model`() {
-
-        val entityRelations = CommitEntity::class.java.declaredFields
-            .filter { field ->
-            val type = field.genericType
-            val isRelevant = (!(type is Class<*> && type.isPrimitive)
-                    && type != String::class.java
-                    && type != java.util.Date::class.java)
-                    && !(field.name.contains("_"))
-            isRelevant
-        }
-            .map { field -> field.name to field.genericType }
-            .toSet()
-
-        // find all fields that don't have primitive or LocalDateTime type in commit model or have names containing"_"
-        // and save their names and generic type in modelRelations
-        val modelRelations = Commit::class.java.declaredFields
-            .filter { field ->
-                val type = field.genericType
-                val isRelevant = (!(type is Class<*> && type.isPrimitive)
-                        && type != String::class.java
-                        && type != java.time.LocalDateTime::class.java)
-                        && !(field.name.contains("_"))
-                isRelevant
-            }
-            .map { field -> field.name to field.genericType }
-            .toSet()
-
-
-        // check that all model relations exist in entity relations with correctly mapped types
-        modelRelations.forEach { (name, modelType) ->
-            val entityRelation = entityRelations.find { it.first == name }
-            if (entityRelation == null) {
-                // if relation does not exist, warn but do not fail
-                println("⚠️ Commit has extra relation (edge) through field $name to model class : $modelType.)")
-            }
-
-            if (modelType is ParameterizedType && entityRelation is ParameterizedType) {
-                    val modelRaw = modelType.rawType as Class<*>
-                    val entityRaw = entityRelation.rawType as Class<*>
-                    val modelParam = modelType.actualTypeArguments.firstOrNull() as? Class<*>
-                    val entityParam = entityRelation.actualTypeArguments.firstOrNull() as? Class<*>
-
-                    // check if raw types match (List<> mapps to Set<> and vice versa)
-                    val rawMatch = (modelRaw == entityRaw) || (modelRaw == Set::class.java && entityRaw == List::class.java)
-                    // check if parameter type matches based on mapping (e.g. Commit → CommitEntity)
-                    val paramMatch = mappedClasses[modelParam] == entityParam || modelParam == entityParam
-
-                    if (!rawMatch || !paramMatch) {
-                        fail("❌ Edge '$name' mismatch between Commit and CommitEntity: expected $modelRaw<$modelParam> but got $entityRaw<$entityParam>")
-                    }
-
-
-            } else if (modelType is Class<*> && entityRelation is Class<*>) {
-                val mappedExpected = mappedClasses[modelType]
-                if (entityRelation != mappedExpected && entityRelation != modelType) {
-                    fail("❌ Edge '$name' mismatch between Commit and CommitEntity: expected ${mappedExpected ?: modelType} but got $entityRelation")
-                }
-            }
-        }
-        // check if entity has extra relations that are not in model
-        val extraRelations = entityRelations.map { it.first }.toSet() - modelRelations.map { it.first }.toSet()
-        if (extraRelations.isNotEmpty()) {
-            for (extraRelation in extraRelations) {
-                println("⚠️ CommitEntity has extra relation (edge) through field $extraRelation to entity class : ${entityRelations.find { it.first == extraRelation }?.second}.")
-            }
-        }
+        `compare entity and model edges`(
+            CommitEntity::class.java,
+            Commit::class.java);
     }
 
     //Test that issue entity has same property types as issue domain model
@@ -280,69 +223,9 @@ class DomainModelAlignmentTest {
     //Test that issue entity has same edges as issue domain model
     @Test
     fun `user entity has same edges as user model`() {
-
-        val entityRelations = UserEntity::class.java.declaredFields
-            .filter { field ->
-                val type = field.genericType
-                val isRelevant = (!(type is Class<*> && type.isPrimitive)
-                        && type != String::class.java)
-                        && !(field.name.contains("_"))
-                isRelevant
-            }
-            .map { field -> field.name to field.genericType }
-            .toSet()
-
-        // find all fields that don't have primitive or LocalDateTime type in commit model or have names containing"_"
-        // and save their names and generic type in modelRelations
-        val modelRelations = User::class.java.declaredFields
-            .filter { field ->
-                val type = field.genericType
-                val isRelevant = (!(type is Class<*> && type.isPrimitive)
-                        && type != String::class.java)
-                        && !(field.name.contains("_"))
-                isRelevant
-            }
-            .map { field -> field.name to field.genericType }
-            .toSet()
-
-
-        // check that all model relations exist in entity relations with correctly mapped types
-        modelRelations.forEach { (name, modelType) ->
-            val entityRelation = entityRelations.find { it.first == name }
-            if (entityRelation == null) {
-                // if relation does not exist, warn but do not fail
-                println("⚠️ User has extra relation (edge) through field $name to model class : $modelType.)")
-            }
-
-            if (modelType is ParameterizedType && entityRelation is ParameterizedType) {
-                val modelRaw = modelType.rawType as Class<*>
-                val entityRaw = entityRelation.rawType as Class<*>
-                val modelParam = modelType.actualTypeArguments.firstOrNull() as? Class<*>
-                val entityParam = entityRelation.actualTypeArguments.firstOrNull() as? Class<*>
-
-                // check if raw types match (List<> mapps to Set<> and vice versa)
-                val rawMatch = (modelRaw == entityRaw) || (modelRaw == Set::class.java && entityRaw == List::class.java)
-                // check if parameter type matches based on mapping (e.g. User → UserEntity)
-                val paramMatch = mappedClasses[modelParam] == entityParam || modelParam == entityParam
-
-                if (!rawMatch || !paramMatch) {
-                    fail("❌ Edge '$name' mismatch between User and UserEntity: expected $modelRaw<$modelParam> but got $entityRaw<$entityParam>")
-                }
-
-
-            } else if (modelType is Class<*> && entityRelation is Class<*>) {
-                val mappedExpected = mappedClasses[modelType]
-                if (entityRelation != mappedExpected && entityRelation != modelType) {
-                    fail("❌ Edge '$name' mismatch between User and UserEntity: expected ${mappedExpected ?: modelType} but got $entityRelation")
-                }
-            }
-        }
-        // check if entity has extra relations that are not in model
-        val extraRelations = entityRelations.map { it.first }.toSet() - modelRelations.map { it.first }.toSet()
-        if (extraRelations.isNotEmpty()) {
-            for (extraRelation in extraRelations) {
-                println("⚠️ UserEntity has extra relation (edge) through field $extraRelation to entity class : ${entityRelations.find { it.first == extraRelation }?.second}.")
-            }
-        }
+        `compare entity and model edges`(
+            UserEntity::class.java,
+            User::class.java
+        )
     }
 }
