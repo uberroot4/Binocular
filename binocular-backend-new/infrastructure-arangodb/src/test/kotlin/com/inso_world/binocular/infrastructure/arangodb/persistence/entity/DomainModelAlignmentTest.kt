@@ -6,9 +6,12 @@ import com.inso_world.binocular.model.Build
 import com.inso_world.binocular.model.Commit
 import com.inso_world.binocular.model.File
 import com.inso_world.binocular.model.Issue
+import com.inso_world.binocular.model.Job
 import com.inso_world.binocular.model.Mention
+import com.inso_world.binocular.model.MergeRequest
 import com.inso_world.binocular.model.Milestone
 import com.inso_world.binocular.model.Note
+import com.inso_world.binocular.model.Platform
 import com.inso_world.binocular.model.Stats
 import com.inso_world.binocular.model.User
 
@@ -121,15 +124,6 @@ class DomainModelAlignmentTest {
             .map { field -> field.name to field.genericType }
             .toSet()
 
-        val mappedClasses = mapOf(
-            Mention::class.java to MentionEntity::class.java,
-            Account::class.java to AccountEntity::class.java,
-            Commit::class.java to CommitEntity::class.java,
-            Milestone::class.java to MilestoneEntity::class.java,
-            Note::class.java to NoteEntity::class.java,
-            User::class.java to UserEntity::class.java,
-        )
-
         // check that all model relations exist in entity relations with correct mapped types
         modelRelations.forEach { (name, modelType) ->
             val entityRelation = entityRelations.find { it.first == name }
@@ -147,12 +141,11 @@ class DomainModelAlignmentTest {
                 // check if raw types match (List<> mapps to Set<> and vice versa)
                 val rawMatch = (modelRaw == entityRaw) || (modelRaw == Set::class.java && entityRaw == List::class.java)
                 // check if parameter type matches based on mapping (e.g. Issue → IssueEntity)
-                val paramMatch = mappedClasses[modelParam] == entityParam || modelParam == entityParam
+                val paramMatch = (mappedClasses[modelParam] == entityParam) || modelParam == entityParam
 
                 if (!rawMatch || !paramMatch) {
                     fail("❌ Edge '$name' mismatch between Issue and IssueEntity: expected $modelRaw<$modelParam> but got $entityRaw<$entityParam>")
                 }
-
 
             } else if (modelType is Class<*> && entityRelation is Class<*>) {
                 val mappedExpected = mappedClasses[modelType]
@@ -161,6 +154,7 @@ class DomainModelAlignmentTest {
                 }
             }
         }
+
         // check if entity has extra relations that are not in model
         val extraRelations = entityRelations.map { it.first }.toSet() - modelRelations.map { it.first }.toSet()
         if (extraRelations.isNotEmpty()) {
@@ -224,16 +218,6 @@ class DomainModelAlignmentTest {
             .map { field -> field.name to field.genericType }
             .toSet()
 
-        val mappedClasses = mapOf(
-            Stats::class.java to StatsEntity::class.java,
-            Commit::class.java to CommitEntity::class.java,
-            Branch::class.java to BranchEntity::class.java,
-            Build::class.java to BuildEntity::class.java,
-            File::class.java to FileEntity::class.java,
-            Module::class.java to ModuleEntity::class.java,
-            User::class.java to UserEntity::class.java,
-            Issue::class.java to IssueEntity::class.java
-        )
 
         // check that all model relations exist in entity relations with correctly mapped types
         modelRelations.forEach { (name, modelType) ->
@@ -317,11 +301,6 @@ class DomainModelAlignmentTest {
             .map { field -> field.name to field.genericType }
             .toSet()
 
-        val mappedClasses = mapOf(
-            Commit::class.java to CommitEntity::class.java,
-            Issue::class.java to IssueEntity::class.java,
-            File::class.java to FileEntity::class.java,
-        )
 
         // check that all model relations exist in entity relations with correctly mapped types
         modelRelations.forEach { (name, modelType) ->
