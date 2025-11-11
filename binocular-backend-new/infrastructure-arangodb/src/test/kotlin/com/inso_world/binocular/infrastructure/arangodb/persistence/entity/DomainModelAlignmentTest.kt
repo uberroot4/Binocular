@@ -399,4 +399,25 @@ class DomainModelAlignmentTest {
             Mention::class.java
         )
     }
+
+    @Test
+    fun `MergeRequestEntity has same raw property types as MergeRequest model`() {
+
+        `compare raw entity and model properties`(
+            MergeRequestEntity::class.java,
+            MergeRequest::class.java,
+            emptySet(),
+            emptyMap(),
+            emptyMap(),
+            emptySet()
+        )
+    }
+
+    @Test
+    fun `MergeRequestEntity has same edges as MergeRequest`() {
+        `compare entity and model edges`(
+            MergeRequestEntity::class.java,
+            MergeRequest::class.java
+        )
+    }
 }
