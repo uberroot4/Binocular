@@ -278,4 +278,32 @@ class DomainModelAlignmentTest {
             Account::class.java
         )
     }
+    @Test
+    fun `BranchEntity has same raw property types as Branch model`() {
+        val internalModelProperties = setOf("_commits")
+        val mappedProperties = mapOf(
+            "name" to "branch"
+        )
+        val deprecatedProperties: Set<String> = setOf(
+            "branch"
+        )
+
+        `compare raw entity and model properties`(
+            BranchEntity::class.java,
+            Branch::class.java,
+            internalModelProperties,
+            emptyMap(),
+            mappedProperties,
+            deprecatedProperties
+        )
+    }
+
+    @Test
+    fun `BranchEntity has same edges as Branch`() {
+        `compare entity and model edges`(
+            BranchEntity::class.java,
+            Branch::class.java
+        )
+    }
+
 }
