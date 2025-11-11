@@ -420,4 +420,25 @@ class DomainModelAlignmentTest {
             MergeRequest::class.java
         )
     }
+
+    @Test
+    fun `MilestoneEntity has same raw property types as Milestone model`() {
+
+        `compare raw entity and model properties`(
+            MilestoneEntity::class.java,
+            Milestone::class.java,
+            emptySet(),
+            emptyMap(),
+            emptyMap(),
+            emptySet()
+        )
+    }
+
+    @Test
+    fun `MilestoneEntity has same edges as Milestone`() {
+        `compare entity and model edges`(
+            MilestoneEntity::class.java,
+            Milestone::class.java
+        )
+    }
 }
