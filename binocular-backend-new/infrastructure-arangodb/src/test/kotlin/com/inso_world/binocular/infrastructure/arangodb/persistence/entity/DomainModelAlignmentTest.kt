@@ -483,4 +483,25 @@ class DomainModelAlignmentTest {
             Note::class.java
         )
     }
+
+    @Test
+    fun `StatsEntity has same raw property types as Stats model`() {
+
+        `compare raw entity and model properties`(
+            StatsEntity::class.java,
+            Stats::class.java,
+            emptySet(),
+            emptyMap(),
+            emptyMap(),
+            emptySet()
+        )
+    }
+
+    @Test
+    fun `StatsEntity has same edges as Stats`() {
+        `compare entity and model edges`(
+            StatsEntity::class.java,
+            Stats::class.java
+        )
+    }
 }
