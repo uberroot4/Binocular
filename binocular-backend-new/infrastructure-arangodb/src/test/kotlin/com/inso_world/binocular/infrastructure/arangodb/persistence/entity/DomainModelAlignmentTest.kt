@@ -375,4 +375,28 @@ class DomainModelAlignmentTest {
             Job::class.java
         )
     }
+
+    @Test
+    fun `MentionEntity has same raw property types as Mention model`() {
+        val allowedTypePairs : Map<Class<out Any>, Class<out Any>> = mapOf(
+            java.time.LocalDateTime::class.java to java.util.Date::class.java
+        )
+
+        `compare raw entity and model properties`(
+            MentionEntity::class.java,
+            Mention::class.java,
+            emptySet(),
+            allowedTypePairs,
+            emptyMap(),
+            emptySet()
+        )
+    }
+
+    @Test
+    fun `MentionEntity has same edges as Mention`() {
+        `compare entity and model edges`(
+            MentionEntity::class.java,
+            Mention::class.java
+        )
+    }
 }
