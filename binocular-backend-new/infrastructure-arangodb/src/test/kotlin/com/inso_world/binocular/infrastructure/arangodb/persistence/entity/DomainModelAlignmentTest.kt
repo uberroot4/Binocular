@@ -278,6 +278,7 @@ class DomainModelAlignmentTest {
             Account::class.java
         )
     }
+
     @Test
     fun `BranchEntity has same raw property types as Branch model`() {
         val internalModelProperties = setOf("_commits")
@@ -306,4 +307,27 @@ class DomainModelAlignmentTest {
         )
     }
 
+    @Test
+    fun `BuildEntity has same raw property types as Build model`() {
+        val allowedTypePairs : Map<Class<out Any>, Class<out Any>> = mapOf(
+            java.time.LocalDateTime::class.java to java.util.Date::class.java
+        )
+
+        `compare raw entity and model properties`(
+            BuildEntity::class.java,
+            Build::class.java,
+            emptySet(),
+            allowedTypePairs,
+            emptyMap(),
+            emptySet()
+        )
+    }
+
+    @Test
+    fun `BuildEntity has same edges as Build`() {
+        `compare entity and model edges`(
+            BuildEntity::class.java,
+            Build::class.java
+        )
+    }
 }
