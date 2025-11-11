@@ -174,18 +174,17 @@ class DomainModelAlignmentTest {
 
     //Test that issue entity has same property types as issue domain model
     @Test
-    fun `issue entity has same raw property types as issue model`() {
+    fun `IssueEntity has same raw property types as Issue`() {
 
-        val allowedTypePairs = mapOf(
+        val allowedTypePairs : Map<Class<out Any>, Class<out Any>> = mapOf(
             java.time.LocalDateTime::class.java to java.util.Date::class.java
-        ) as Map<Class<out Any>, Class<out Any>>
+        )
 
         `compare raw entity and model properties`(
             IssueEntity::class.java,
             Issue::class.java,
             emptySet(),
             allowedTypePairs,
-            emptyMap()
             emptyMap(),
             emptySet()
         )
@@ -193,7 +192,7 @@ class DomainModelAlignmentTest {
 
     //Test that issue entity has same edges as issue domain model
     @Test
-    fun `issue entity has same edges as issue model`() {
+    fun `IssueEntity has same edges as Issue`() {
         `compare entity and model edges`(
             IssueEntity::class.java,
             Issue::class.java)
@@ -201,7 +200,7 @@ class DomainModelAlignmentTest {
 
     //Test that commit entity has same raw property types as commit domain model
     @Test
-    fun `commit entity has same raw property types as commit model`() {
+    fun `CommitEntity has same raw property types as Commit`() {
         val internalModelProperties = setOf("_parents", "_children", "_branches")
 
         val mappedProperties = mapOf(
@@ -222,13 +221,14 @@ class DomainModelAlignmentTest {
             Commit::class.java,
             internalModelProperties,
             allowedTypePairs,
-            mappedProperties
+            mappedProperties,
+            deprecatedProperties
         )
     }
 
     //Test that commit entity has same edges as commit domain model
     @Test
-    fun `commit entity has same edges as commit model`() {
+    fun `CommitEntity has same edges as Commit`() {
         `compare entity and model edges`(
             CommitEntity::class.java,
             Commit::class.java);
@@ -236,7 +236,7 @@ class DomainModelAlignmentTest {
 
     //Test that issue entity has same property types as issue domain model
     @Test
-    fun `user entity has same raw property types as user model`() {
+    fun `UserEntity has same raw property types as User`() {
         val internalModelProperties = setOf("_committedCommits", "_authoredCommits")
 
         `compare raw entity and model properties`(
@@ -244,13 +244,14 @@ class DomainModelAlignmentTest {
             User::class.java,
             internalModelProperties,
             emptyMap(),
-            emptyMap()
+            emptyMap(),
+            emptySet()
             )
     }
 
     //Test that issue entity has same edges as issue domain model
     @Test
-    fun `user entity has same edges as user model`() {
+    fun `UserEntity has same edges as User`() {
         `compare entity and model edges`(
             UserEntity::class.java,
             User::class.java
@@ -258,19 +259,20 @@ class DomainModelAlignmentTest {
     }
 
     @Test
-    fun `account entity has same raw property types as account model`() {
+    fun `AccountEntity has same raw property types as Account`() {
 
         `compare raw entity and model properties`(
             AccountEntity::class.java,
             Account::class.java,
             emptySet(),
             emptyMap(),
-            emptyMap()
+            emptyMap(),
+            emptySet()
             )
     }
 
     @Test
-    fun `account entity has same edges as account model`() {
+    fun `AccountEntity has same edges as Account`() {
         `compare entity and model edges`(
             AccountEntity::class.java,
             Account::class.java
