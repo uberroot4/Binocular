@@ -441,4 +441,25 @@ class DomainModelAlignmentTest {
             Milestone::class.java
         )
     }
+
+    @Test
+    fun `ModuleEntity has same raw property types as Module model`() {
+
+        `compare raw entity and model properties`(
+            ModuleEntity::class.java,
+            com.inso_world.binocular.model.Module::class.java,
+            emptySet(),
+            emptyMap(),
+            emptyMap(),
+            emptySet()
+        )
+    }
+
+    @Test
+    fun `ModuleEntity has same edges as Module`() {
+        `compare entity and model edges`(
+            ModuleEntity::class.java,
+            com.inso_world.binocular.model.Module::class.java
+        )
+    }
 }
