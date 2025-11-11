@@ -18,6 +18,7 @@ import com.inso_world.binocular.model.User
 import org.junit.jupiter.api.Test
 import org.springframework.test.util.AssertionErrors.fail
 import java.lang.reflect.ParameterizedType
+import kotlin.collections.Map
 
 // Test to ensure that the persistence entity classes align with the domain model classes
 // Tests should fail if there are mismatches in property types or relations
@@ -51,14 +52,36 @@ class DomainModelAlignmentTest {
                                                   model: Class<*>,
                                                   internalModelProperties: Set<String>,
                                                   allowedTypePairs: Map<Class<out Any>, Class<out Any>>,
-                                                  mappedProperties: Map<String, String>) {
-        val entityProps = entity.declaredFields.associate { it.name to it.type }
-        val modelProps = model.declaredFields.associate { it.name to it.type }
+                                                  mappedProperties: Map<String, String>,
+                                                  deprecatedProperties: Set<String>) {
+        val entityProps = entity.declaredFields
+            .associate { it.name to it.type }
+        val modelProps = model.declaredFields
+            .associate { it.name to it.type }
+
 
         // check for matching type or allowed equivalence
         modelProps.forEach { (name, modelType) ->
             val entityPropertyName = mappedProperties[name] ?: name
             val entityType = entityProps[entityPropertyName]
+
+            if (deprecatedProperties.contains(name)) {
+                //if a property is deprecated check for its existence in the entity and mapping status
+                if (entityType != null) {
+                    if (!mappedProperties.values.contains(entityPropertyName)) {
+                        println("️⚠️ Property '$name' in ${model.simpleName} is deprecated but still exists in ${entity.simpleName}.")
+                    } else {
+                        var key : String = ""
+                        mappedProperties.forEach { pair ->
+                            if (pair.value == entityPropertyName) key = pair.key
+                        }
+                        println("️⚠️ Property '$name' in ${model.simpleName} is deprecated but replaced by property '$key.'")
+                    }
+                } else {
+                    println("️⚠️ Property '$name' in ${model.simpleName} is deprecated but does not exist in ${entity.simpleName}.")
+                }
+                return@forEach
+            }
 
             if (entityType == null && name !in internalModelProperties) {
                 println("⚠️ ${model.simpleName} has extra field '$name' (model type: $modelType)")
@@ -79,7 +102,6 @@ class DomainModelAlignmentTest {
                 println("️⚠️ ${entity.simpleName} has extra field not in model: $extraField (type: $entityType)")
             }
         }
-
     }
 
     fun `compare entity and model edges`(entity: Class<*>,
@@ -164,6 +186,8 @@ class DomainModelAlignmentTest {
             emptySet(),
             allowedTypePairs,
             emptyMap()
+            emptyMap(),
+            emptySet()
         )
     }
 
@@ -187,6 +211,10 @@ class DomainModelAlignmentTest {
         val allowedTypePairs = mapOf(
             java.time.LocalDateTime::class.java to java.util.Date::class.java,
             java.util.Set::class.java to java.util.List::class.java
+        )
+
+        val deprecatedProperties: Set<String> = setOf(
+            "branch"
         )
 
         `compare raw entity and model properties`(
