@@ -462,4 +462,25 @@ class DomainModelAlignmentTest {
             com.inso_world.binocular.model.Module::class.java
         )
     }
+
+    @Test
+    fun `NoteEntity has same raw property types as Note model`() {
+
+        `compare raw entity and model properties`(
+            NoteEntity::class.java,
+            Note::class.java,
+            emptySet(),
+            emptyMap(),
+            emptyMap(),
+            emptySet()
+        )
+    }
+
+    @Test
+    fun `NoteEntity has same edges as Note`() {
+        `compare entity and model edges`(
+            NoteEntity::class.java,
+            Note::class.java
+        )
+    }
 }
