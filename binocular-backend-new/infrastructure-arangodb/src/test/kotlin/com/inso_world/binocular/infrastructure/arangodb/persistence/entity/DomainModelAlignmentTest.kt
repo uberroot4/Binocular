@@ -330,4 +330,25 @@ class DomainModelAlignmentTest {
             Build::class.java
         )
     }
+
+    @Test
+    fun `FileEntity has same raw property types as File model`() {
+
+        `compare raw entity and model properties`(
+            FileEntity::class.java,
+            File::class.java,
+            emptySet(),
+            emptyMap(),
+            emptyMap(),
+            emptySet()
+        )
+    }
+
+    @Test
+    fun `FileEntity has same edges as File`() {
+        `compare entity and model edges`(
+            FileEntity::class.java,
+            File::class.java
+        )
+    }
 }
