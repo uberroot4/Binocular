@@ -23,11 +23,6 @@ import java.lang.reflect.ParameterizedType
 import kotlin.collections.Map
 
 
-//TODO: check if tests can be further automated/simplified
-// double check against model and entity
-// double check against ER diagramm
-// double check deprecated properties handling for style inconsistencies
-
 // Test to ensure that the persistence entity classes align with the domain model classes
 // Tests should fail if there are mismatches in property types or relations
 // and warn if there are extra properties or relations
