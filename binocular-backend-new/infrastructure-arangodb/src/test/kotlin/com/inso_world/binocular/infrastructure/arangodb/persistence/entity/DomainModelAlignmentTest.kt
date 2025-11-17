@@ -15,10 +15,18 @@ import com.inso_world.binocular.model.Platform
 import com.inso_world.binocular.model.Stats
 import com.inso_world.binocular.model.User
 
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.test.util.AssertionErrors.fail
 import java.lang.reflect.ParameterizedType
 import kotlin.collections.Map
+
+
+//TODO: check if tests can be further automated/simplified
+// double check against model and entity
+// double check against ER diagramm
+// double check deprecated properties handling for style inconsistencies
 
 // Test to ensure that the persistence entity classes align with the domain model classes
 // Tests should fail if there are mismatches in property types or relations
@@ -43,6 +51,100 @@ class DomainModelAlignmentTest {
         Stats::class.java to StatsEntity::class.java,
         User::class.java to UserEntity::class.java,
     );
+
+    companion object {
+        @JvmStatic
+        fun entityModelPairs() =
+            listOf(
+                Arguments.of(Account::class.java, AccountEntity::class.java),
+                Arguments.of(Branch::class.java, BranchEntity::class.java),
+                Arguments.of(Build::class.java, BuildEntity::class.java),
+                Arguments.of(Commit::class.java, CommitEntity::class.java),
+                Arguments.of(File::class.java, FileEntity::class.java),
+                Arguments.of(Issue::class.java, IssueEntity::class.java),
+                Arguments.of(Job::class.java, JobEntity::class.java),
+                Arguments.of(Mention::class.java, MentionEntity::class.java),
+                Arguments.of(MergeRequest::class.java, MergeRequestEntity::class.java),
+                Arguments.of(Milestone::class.java, MilestoneEntity::class.java),
+                Arguments.of(com.inso_world.binocular.model.Module::class.java, ModuleEntity::class.java),
+                Arguments.of(Note::class.java, NoteEntity::class.java),
+                Arguments.of(Stats::class.java, StatsEntity::class.java),
+                Arguments.of(User::class.java, UserEntity::class.java),
+            )
+    }
+
+    @ParameterizedTest
+    @MethodSource("entityModelPairs")
+    fun `compare entity and model alignment`(model: Class<*>, entity: Class<*>) {
+        var internalModelProperties = emptySet<String>()
+        var allowedTypePairs = emptyMap<Class<out Any>, Class<out Any>>()
+        var mappedProperties = emptyMap<String, String>()
+        var deprecatedProperties = emptySet<String>()
+
+        // handle special cases per model entity pair if applicable
+        // TODO: spacial cases better defined in companion object?
+        if (model == Issue::class.java) {
+            allowedTypePairs = mapOf(
+                java.time.LocalDateTime::class.java to java.util.Date::class.java
+            )
+        }
+        if (model == Commit::class.java) {
+            internalModelProperties = setOf("_parents", "_children", "_branches")
+
+            mappedProperties = mapOf(
+                "commitDateTime" to "date"
+            )
+
+            allowedTypePairs = mapOf(
+                java.time.LocalDateTime::class.java to java.util.Date::class.java,
+                java.util.Set::class.java to java.util.List::class.java
+            )
+
+            deprecatedProperties = setOf(
+                "branch"
+            )
+        }
+        if (model == User::class.java) {
+            internalModelProperties = setOf("_committedCommits", "_authoredCommits")
+        }
+        if (model == Branch::class.java) {
+            internalModelProperties = setOf("_commits")
+            mappedProperties = mapOf(
+                "name" to "branch"
+            )
+            deprecatedProperties = setOf(
+                "branch"
+            )
+        }
+        if (model == Build::class.java) {
+            allowedTypePairs = mapOf(
+            java.time.LocalDateTime::class.java to java.util.Date::class.java
+            )
+        }
+        if (model == Job::class.java) {
+            allowedTypePairs = mapOf(
+            java.time.LocalDateTime::class.java to java.util.Date::class.java
+            )
+        }
+        if (model == Mention::class.java) {
+            allowedTypePairs = mapOf(
+            java.time.LocalDateTime::class.java to java.util.Date::class.java
+            )
+        }
+
+        //perform test
+        `compare raw entity and model properties`(
+            entity,
+            model,
+            internalModelProperties,
+            allowedTypePairs,
+            mappedProperties,
+            deprecatedProperties
+        )
+
+        `compare entity and model edges`(entity, model)
+
+    }
 
     // Generic method to compare properties of given entity and model classes
     // internalModelProperties: properties that should be ignored in the comparison because they are internal to the model
@@ -137,7 +239,7 @@ class DomainModelAlignmentTest {
             val entityRelation = entityRelations.find { it.first == name }
             if (entityRelation == null) {
                 // if relation does not exist, warn but do not fail
-                println("⚠️ ${model.simpleName} has extra relation (edge) through field $name to model class : $modelType.)")
+                println("⚠️ ${model.simpleName} has extra relation (edge) through field $name to model class : $modelType.")
             }
 
             if (modelType is ParameterizedType && entityRelation is ParameterizedType) {
@@ -172,336 +274,5 @@ class DomainModelAlignmentTest {
         }
     }
 
-    //Test that issue entity has same property types as issue domain model
-    @Test
-    fun `IssueEntity has same raw property types as Issue`() {
 
-        val allowedTypePairs : Map<Class<out Any>, Class<out Any>> = mapOf(
-            java.time.LocalDateTime::class.java to java.util.Date::class.java
-        )
-
-        `compare raw entity and model properties`(
-            IssueEntity::class.java,
-            Issue::class.java,
-            emptySet(),
-            allowedTypePairs,
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    //Test that issue entity has same edges as issue domain model
-    @Test
-    fun `IssueEntity has same edges as Issue`() {
-        `compare entity and model edges`(
-            IssueEntity::class.java,
-            Issue::class.java)
-    }
-
-    //Test that commit entity has same raw property types as commit domain model
-    @Test
-    fun `CommitEntity has same raw property types as Commit`() {
-        val internalModelProperties = setOf("_parents", "_children", "_branches")
-
-        val mappedProperties = mapOf(
-            "commitDateTime" to "date"
-        )
-
-        val allowedTypePairs = mapOf(
-            java.time.LocalDateTime::class.java to java.util.Date::class.java,
-            java.util.Set::class.java to java.util.List::class.java
-        )
-
-        val deprecatedProperties: Set<String> = setOf(
-            "branch"
-        )
-
-        `compare raw entity and model properties`(
-            CommitEntity::class.java,
-            Commit::class.java,
-            internalModelProperties,
-            allowedTypePairs,
-            mappedProperties,
-            deprecatedProperties
-        )
-    }
-
-    //Test that commit entity has same edges as commit domain model
-    @Test
-    fun `CommitEntity has same edges as Commit`() {
-        `compare entity and model edges`(
-            CommitEntity::class.java,
-            Commit::class.java);
-    }
-
-    //Test that issue entity has same property types as issue domain model
-    @Test
-    fun `UserEntity has same raw property types as User`() {
-        val internalModelProperties = setOf("_committedCommits", "_authoredCommits")
-
-        `compare raw entity and model properties`(
-            UserEntity::class.java,
-            User::class.java,
-            internalModelProperties,
-            emptyMap(),
-            emptyMap(),
-            emptySet()
-            )
-    }
-
-    //Test that issue entity has same edges as issue domain model
-    @Test
-    fun `UserEntity has same edges as User`() {
-        `compare entity and model edges`(
-            UserEntity::class.java,
-            User::class.java
-        )
-    }
-
-    @Test
-    fun `AccountEntity has same raw property types as Account`() {
-
-        `compare raw entity and model properties`(
-            AccountEntity::class.java,
-            Account::class.java,
-            emptySet(),
-            emptyMap(),
-            emptyMap(),
-            emptySet()
-            )
-    }
-
-    @Test
-    fun `AccountEntity has same edges as Account`() {
-        `compare entity and model edges`(
-            AccountEntity::class.java,
-            Account::class.java
-        )
-    }
-
-    @Test
-    fun `BranchEntity has same raw property types as Branch model`() {
-        val internalModelProperties = setOf("_commits")
-        val mappedProperties = mapOf(
-            "name" to "branch"
-        )
-        val deprecatedProperties: Set<String> = setOf(
-            "branch"
-        )
-
-        `compare raw entity and model properties`(
-            BranchEntity::class.java,
-            Branch::class.java,
-            internalModelProperties,
-            emptyMap(),
-            mappedProperties,
-            deprecatedProperties
-        )
-    }
-
-    @Test
-    fun `BranchEntity has same edges as Branch`() {
-        `compare entity and model edges`(
-            BranchEntity::class.java,
-            Branch::class.java
-        )
-    }
-
-    @Test
-    fun `BuildEntity has same raw property types as Build model`() {
-        val allowedTypePairs : Map<Class<out Any>, Class<out Any>> = mapOf(
-            java.time.LocalDateTime::class.java to java.util.Date::class.java
-        )
-
-        `compare raw entity and model properties`(
-            BuildEntity::class.java,
-            Build::class.java,
-            emptySet(),
-            allowedTypePairs,
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    @Test
-    fun `BuildEntity has same edges as Build`() {
-        `compare entity and model edges`(
-            BuildEntity::class.java,
-            Build::class.java
-        )
-    }
-
-    @Test
-    fun `FileEntity has same raw property types as File model`() {
-
-        `compare raw entity and model properties`(
-            FileEntity::class.java,
-            File::class.java,
-            emptySet(),
-            emptyMap(),
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    @Test
-    fun `FileEntity has same edges as File`() {
-        `compare entity and model edges`(
-            FileEntity::class.java,
-            File::class.java
-        )
-    }
-
-    @Test
-    fun `JobEntity has same raw property types as Job model`() {
-        val allowedTypePairs : Map<Class<out Any>, Class<out Any>> = mapOf(
-            java.time.LocalDateTime::class.java to java.util.Date::class.java
-        )
-
-        `compare raw entity and model properties`(
-            JobEntity::class.java,
-            Job::class.java,
-            emptySet(),
-            allowedTypePairs,
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    @Test
-    fun `JobEntity has same edges as Job`() {
-        `compare entity and model edges`(
-            JobEntity::class.java,
-            Job::class.java
-        )
-    }
-
-    @Test
-    fun `MentionEntity has same raw property types as Mention model`() {
-        val allowedTypePairs : Map<Class<out Any>, Class<out Any>> = mapOf(
-            java.time.LocalDateTime::class.java to java.util.Date::class.java
-        )
-
-        `compare raw entity and model properties`(
-            MentionEntity::class.java,
-            Mention::class.java,
-            emptySet(),
-            allowedTypePairs,
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    @Test
-    fun `MentionEntity has same edges as Mention`() {
-        `compare entity and model edges`(
-            MentionEntity::class.java,
-            Mention::class.java
-        )
-    }
-
-    @Test
-    fun `MergeRequestEntity has same raw property types as MergeRequest model`() {
-
-        `compare raw entity and model properties`(
-            MergeRequestEntity::class.java,
-            MergeRequest::class.java,
-            emptySet(),
-            emptyMap(),
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    @Test
-    fun `MergeRequestEntity has same edges as MergeRequest`() {
-        `compare entity and model edges`(
-            MergeRequestEntity::class.java,
-            MergeRequest::class.java
-        )
-    }
-
-    @Test
-    fun `MilestoneEntity has same raw property types as Milestone model`() {
-
-        `compare raw entity and model properties`(
-            MilestoneEntity::class.java,
-            Milestone::class.java,
-            emptySet(),
-            emptyMap(),
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    @Test
-    fun `MilestoneEntity has same edges as Milestone`() {
-        `compare entity and model edges`(
-            MilestoneEntity::class.java,
-            Milestone::class.java
-        )
-    }
-
-    @Test
-    fun `ModuleEntity has same raw property types as Module model`() {
-
-        `compare raw entity and model properties`(
-            ModuleEntity::class.java,
-            com.inso_world.binocular.model.Module::class.java,
-            emptySet(),
-            emptyMap(),
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    @Test
-    fun `ModuleEntity has same edges as Module`() {
-        `compare entity and model edges`(
-            ModuleEntity::class.java,
-            com.inso_world.binocular.model.Module::class.java
-        )
-    }
-
-    @Test
-    fun `NoteEntity has same raw property types as Note model`() {
-
-        `compare raw entity and model properties`(
-            NoteEntity::class.java,
-            Note::class.java,
-            emptySet(),
-            emptyMap(),
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    @Test
-    fun `NoteEntity has same edges as Note`() {
-        `compare entity and model edges`(
-            NoteEntity::class.java,
-            Note::class.java
-        )
-    }
-
-    @Test
-    fun `StatsEntity has same raw property types as Stats model`() {
-
-        `compare raw entity and model properties`(
-            StatsEntity::class.java,
-            Stats::class.java,
-            emptySet(),
-            emptyMap(),
-            emptyMap(),
-            emptySet()
-        )
-    }
-
-    @Test
-    fun `StatsEntity has same edges as Stats`() {
-        `compare entity and model edges`(
-            StatsEntity::class.java,
-            Stats::class.java
-        )
-    }
 }
