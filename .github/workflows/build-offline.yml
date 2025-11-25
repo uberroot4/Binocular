@@ -123,7 +123,7 @@ jobs:
             --compress-output true \
             --overwrite true \
             --progress true \
-            --output-directory \tmp\dump
+            --output-directory /tmp/dump
           docker cp arangodb_svc:/tmp/dump ./dump
       
       - name: Publish arangodump
