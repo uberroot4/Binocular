@@ -115,11 +115,25 @@ jobs:
 
       - name: docker commit
         run: |
-          echo ${{ steps.docker_setup.outputs.docker_image_name }}:${{ steps.docker_setup.outputs.docker_image_tag }}
-          docker commit arangodb_svc ${{ steps.docker_setup.outputs.docker_image_name }}:${{ steps.docker_setup.outputs.docker_image_tag }}
+          # echo ${{ steps.docker_setup.outputs.docker_image_name }}:${{ steps.docker_setup.outputs.docker_image_tag }}
+          # docker commit arangodb_svc ${{ steps.docker_setup.outputs.docker_image_name }}:${{ steps.docker_setup.outputs.docker_image_tag }}
+          docker exec arangodb_svc arangodump \
+            --server.database binocular-Binocular \
+            --compress-output true \
+            --overwrite true \
+            --progress true \
+            --output-directory \tmp\dump
+          docker cp arangodb_svc:/tmp/dump ./dump
+      
+      - name: Publish arangodump
+        uses: actions/upload-artifact@v4
+        with:
+          name: adb_dump
+          path: |
+            ./dump
         
-      - name: docker images
-        run: docker images
+      # - name: docker images
+      #   run: docker images
 
       - name: Init Docker
         uses: ./.github/actions/docker-setup
