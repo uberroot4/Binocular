@@ -52,7 +52,7 @@ jobs:
       - name: Start ArangoDB service container
         run: |
           echo "Starting service with image: ${ARANGO_IMAGE,,}"
-          docker run -d -p 8529:8529 --name arangodb_svc ${ARANGO_IMAGE,,}
+          docker run -d -p 8529:8529 --name arangodb_svc -e ARANGO_NO_AUTH=1 ${ARANGO_IMAGE,,}
 
       - name: Debug echo env variables
         run: |
