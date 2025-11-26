@@ -46,6 +46,23 @@ class CommitService(
     }
 
     fun findAll(
+        @Min(0) page: Int = 0,
+        @Min(0) @Max(2048) perPage: Int = 100,
+    ): Iterable<Commit> {
+        logger.trace("Loading all commits...")
+        val page = if (page < 0) 0 else page
+        val perPage = if (perPage < 0) 0 else perPage
+        logger.debug("page is $page, perPage is $perPage")
+        val pageable: Pageable = PageRequest.of(page, perPage)
+
+        try {
+            return commitPort.findAll(pageable)
+        } catch (e: BinocularInfrastructureException) {
+            throw ServiceException(e)
+        }
+    }
+
+    fun findAll(
         repo: Repository,
         @Min(0) page: Int = 0,
         @Min(0) @Max(2048) perPage: Int = 100,
