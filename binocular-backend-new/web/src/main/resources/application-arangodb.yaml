@@ -1,7 +1,7 @@
 binocular:
   database:
-    database_name: "binocular-repo"
+    database_name: "binocular"
     host: "localhost"
     port: 8529
-    user: TODO
-    password: TODO
+    user: root
+    password: test

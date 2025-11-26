@@ -63,6 +63,7 @@
         <module>infrastructure-test</module>
         <module>cli</module>
         <module>web</module>
+        <module>export</module>
     </modules>
     <dependencyManagement>
         <!--
