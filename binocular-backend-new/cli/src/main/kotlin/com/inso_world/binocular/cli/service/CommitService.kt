@@ -87,4 +87,16 @@ class CommitService(
         logger.trace("Finding head for branch $branch in repository ${repo.localPath}...")
         return commitPort.findHeadForBranch(repo, branch)
     }
+
+
+
+
+
+    fun findChildrenOfCommit(parentCommitId: String): List<Commit> {
+        return commitPort.findChildCommitsByParentCommitId(parentCommitId)
+    }
+
+    fun findBySha(sha: String): Commit? {
+            return commitPort.findBySha(sha)
+    }
 }

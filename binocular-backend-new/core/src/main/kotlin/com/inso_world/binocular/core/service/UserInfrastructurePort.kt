@@ -36,4 +36,6 @@ interface UserInfrastructurePort : BinocularInfrastructurePort<User> {
     fun findFilesByUserId(userId: String): List<File>
 
     fun findAll(repository: Repository): Iterable<User>
+
+    fun findUserByCommit(commitId: String): List<User>
 }

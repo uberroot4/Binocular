@@ -103,4 +103,6 @@ interface CommitInfrastructurePort : BinocularInfrastructurePort<Commit> {
     ): Commit?
 
     fun findAllLeafCommits(repo: Repository): Iterable<Commit>
+
+    fun findBySha(sha: String): Commit?
 }

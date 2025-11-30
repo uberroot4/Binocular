@@ -26,4 +26,12 @@ class UserService(
 
         return userPort.findAll().filter { emails.contains(it.email) }
     }
+
+
+
+
+
+    fun findUserByCommit(commitId: String): List<User> {
+        return userPort.findUserByCommit(commitId)
+    }
 }

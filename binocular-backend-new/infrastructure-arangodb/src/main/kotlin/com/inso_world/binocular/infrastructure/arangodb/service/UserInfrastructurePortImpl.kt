@@ -89,4 +89,10 @@ class UserInfrastructurePortImpl : UserInfrastructurePort {
     override fun deleteAll() {
         this.userDao.deleteAll()
     }
+
+
+
+    override fun findUserByCommit(commitId: String): List<User> {
+        return commitUserConnectionRepository.findUsersByCommit(commitId)
+    }
 }

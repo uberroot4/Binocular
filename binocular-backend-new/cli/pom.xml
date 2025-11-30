@@ -59,6 +59,11 @@
         </dependency>
         <dependency>
             <groupId>com.inso-world.binocular</groupId>
+            <artifactId>export</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.inso-world.binocular</groupId>
             <artifactId>domain</artifactId>
             <version>${project.version}</version>
         </dependency>

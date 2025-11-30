@@ -110,6 +110,13 @@ internal class CommitInfrastructurePortImpl : CommitInfrastructurePort {
         return commitCommitConnectionRepository.findChildCommits(parentCommitId)
     }
 
+
+    override fun findBySha(sha: String): Commit? {
+        return commitDao.findBySha(sha)
+    }
+
+
+
     override fun findAll(): Iterable<Commit> = this.commitDao.findAll()
 
     override fun create(entity: Commit): Commit = this.commitDao.save(entity)
