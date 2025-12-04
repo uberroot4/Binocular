@@ -1,0 +1,21 @@
+{
+    "@context": {
+        "@version": 1.1,
+        "binocular": "https://data.inso-world.com/ontology/binocular#",
+
+        "BranchExport": "binocular:BranchExport",
+        "ChildCommitDetail": "binocular:ChildCommitDetail",
+
+        "branchName": "binocular:hasBranchName",
+        "latestCommitSha": "binocular:hasLatestCommitSha",
+        "parentCommitId": "binocular:referencesParentCommitId",
+        "parentCommitterId": "binocular:hasParentCommitterId",
+        "committerId": "binocular:hasCommitterId",
+
+        "childrenCommits": {
+          "@id": "binocular:hasChildCommits",
+          "@type": "@id",
+          "@container": "@set"
+        }
+    }
+}

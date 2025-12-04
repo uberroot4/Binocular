@@ -1,0 +1,54 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix binocular: <https://data.inso-world.com/ontology/binocular#> .
+
+# This Shape defines the rules for all objects of type 'binocular:BranchExport'
+binocular:BranchExportShape
+    a sh:NodeShape ;
+    sh:targetClass binocular:BranchExport ; # The data type this shape applies to
+    sh:severity sh:Violation ;              # If these rules fail, it's a hard violation
+
+    # Constraint 1: branchName
+    sh:property [
+          sh:path binocular:hasBranchName ;
+          sh:name "Branch Name" ;
+          sh:description "BranchExport must have a branchName." ;
+          sh:minCount 1 ;               # Must be present
+          sh:maxCount 1 ;               # Must be singular
+          sh:datatype xsd:string        # Must be a string
+      ] ;
+
+    # Constraint 2: latestCommitSha
+    sh:property [
+          sh:path binocular:hasLatestCommitSha ;
+          sh:name "Latest Commit SHA" ;
+          sh:description "BranchExport must have a unique commit SHA." ;
+          sh:minCount 1 ;
+          sh:maxCount 1 ;
+          sh:datatype xsd:string
+      ] ;
+
+    # Constraint 3: childrenCommits (List of commits)
+    sh:property [
+          sh:path binocular:hasChildCommits ;
+          sh:name "Child Commits List" ;
+          sh:description "The list of childrenCommits must be present and non-empty." ;
+          sh:minCount 1 ;               # The list must exist
+          sh:minCount 1 ;
+          sh:node binocular:ChildCommitDetailShape ; # All list items must conform to the ChildCommitDetailShape
+      ] .
+
+# This Shape defines the rules for items inside the childrenCommits list
+binocular:ChildCommitDetailShape
+    a sh:NodeShape ;
+    sh:targetClass binocular:ChildCommitDetail ; # The data type this shape applies to
+
+    # Constraint 4: committerId
+    sh:property [
+          sh:path binocular:hasCommitterId ;
+          sh:name "Committer ID" ;
+          sh:description "ChildCommitDetail must contain the committerId." ;
+          sh:minCount 1 ;
+          sh:maxCount 1 ;
+          sh:datatype xsd:string
+      ] .
