@@ -2,6 +2,7 @@ package com.inso_world.binocular.infrastructure.sql.mapper
 
 import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingContext
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.IssueEntity
+import com.inso_world.binocular.infrastructure.sql.persistence.entity.ProjectEntity
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.toEntity
 import com.inso_world.binocular.model.Issue
 import com.inso_world.binocular.model.User

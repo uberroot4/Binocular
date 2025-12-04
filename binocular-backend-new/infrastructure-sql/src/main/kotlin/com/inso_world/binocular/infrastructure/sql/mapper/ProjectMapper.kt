@@ -1,9 +1,11 @@
 package com.inso_world.binocular.infrastructure.sql.mapper
 
 import com.inso_world.binocular.core.persistence.proxy.RelationshipProxyFactory
+import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingContext
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.ProjectEntity
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.toEntity
 import com.inso_world.binocular.model.Project
+import jakarta.persistence.EntityManager
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,36 +14,48 @@ import org.springframework.stereotype.Component
 
 @Component
 internal class ProjectMapper
+@Autowired
+constructor(
+    private val proxyFactory: RelationshipProxyFactory,
+    @Lazy private val repoMapper: RepositoryMapper,
+    @Lazy private val issueMapper: IssueMapper,
+) {
+    var logger: Logger = LoggerFactory.getLogger(ProjectMapper::class.java)
+
     @Autowired
-    constructor(
-        private val proxyFactory: RelationshipProxyFactory,
-        @Lazy private val repoMapper: RepositoryMapper,
-    ) {
-        var logger: Logger = LoggerFactory.getLogger(ProjectMapper::class.java)
+    @Lazy
+    private lateinit var entityManager: EntityManager
 
-        fun toEntity(domain: Project): ProjectEntity {
-            val p = domain.toEntity()
+    @Autowired
+    private lateinit var ctx: MappingContext
 
-            p.repo =
-                domain.repo?.let {
-                    repoMapper.toEntity(it, p)
-                }
+    fun toEntity(domain: Project): ProjectEntity {
+        logger.debug("toEntity({})", domain)
+        val p = domain.toEntity()
 
-            return p
-        }
+        p.repo =
+            domain.repo?.let {
+                repoMapper.toEntity(it, p)
+            }
 
-        // TODO accounts for project should be mapped based on issues in project
-        fun toDomain(entity: ProjectEntity): Project {
-            val id = entity.id ?: throw IllegalStateException("Entity ID cannot be null")
+//        p.issues = domain.issues.map { issueMapper.toEntity(it,) }
+//            .toMutableSet()
 
-            val p = entity.toDomain()
-
-            p.repo =
-                entity.repo?.let { r ->
-                    r.id?.let {
-                        repoMapper.toDomain(r, p)
-                    }
-                }
-            return p
-        }
+        return p
     }
+
+    // TODO accounts for project should be mapped based on issues in project
+    fun toDomain(entity: ProjectEntity): Project {
+        val id = entity.id ?: throw IllegalStateException("Entity ID cannot be null")
+
+        val p = entity.toDomain()
+
+        p.repo =
+            entity.repo?.let { r ->
+                r.id?.let {
+                    repoMapper.toDomain(r, p)
+                }
+            }
+        return p
+    }
+}

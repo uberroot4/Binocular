@@ -3,13 +3,18 @@ package com.inso_world.binocular.infrastructure.sql.service
 import com.inso_world.binocular.core.persistence.exception.NotFoundException
 import com.inso_world.binocular.core.persistence.model.Page
 import com.inso_world.binocular.core.service.ProjectInfrastructurePort
+import com.inso_world.binocular.infrastructure.sql.mapper.IssueMapper
 import com.inso_world.binocular.infrastructure.sql.mapper.ProjectMapper
 import com.inso_world.binocular.infrastructure.sql.mapper.RepositoryMapper
+import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingContext
 import com.inso_world.binocular.infrastructure.sql.mapper.context.MappingSession
 import com.inso_world.binocular.infrastructure.sql.persistence.dao.interfaces.IProjectDao
+import com.inso_world.binocular.infrastructure.sql.persistence.entity.IssueEntity
 import com.inso_world.binocular.infrastructure.sql.persistence.entity.ProjectEntity
 import com.inso_world.binocular.model.Project
 import jakarta.annotation.PostConstruct
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.data.domain.Pageable
@@ -23,13 +28,22 @@ internal class ProjectInfrastructurePortImpl(
     @Autowired private val projectDao: IProjectDao,
 ) : AbstractInfrastructurePort<Project, ProjectEntity, Long>(Long::class),
     ProjectInfrastructurePort {
+        private val logger: Logger = LoggerFactory.getLogger(ProjectInfrastructurePortImpl::class.java)
+
     @Lazy
     @Autowired
     private lateinit var repositoryMapper: RepositoryMapper
 
     @Lazy
     @Autowired
+    private lateinit var issueMapper: IssueMapper
+
+    @Lazy
+    @Autowired
     private lateinit var repositoryPort: RepositoryInfrastructurePortImpl
+
+    @Autowired
+    private lateinit var ctx: MappingContext
 
     @PostConstruct
     fun init() {
@@ -90,6 +104,20 @@ internal class ProjectInfrastructurePortImpl(
                 else -> { }
             }
         }
+
+        // synchronize issues
+        run {
+            val issueKeys = value.issues.map { it.gid }.toSet()
+            managedEntity.issues.removeIf { it.gid !in issueKeys }
+        }
+        logger.trace("Issues synchronized")
+
+        // build context after changes are synchronized
+        ctx.entity.issue.putAll(managedEntity.issues.associateBy(IssueEntity::uniqueKey))
+        logger.trace("Entity context built")
+
+        // TODO
+        // look at repo port update and do similar update
 
         return super.updateEntity(managedEntity).let {
             projectDao.flush()
