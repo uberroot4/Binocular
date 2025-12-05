@@ -97,6 +97,23 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+            </dependency>
+        <!-- Apache Jena Core: RDF Parsing and Graph Handling -->
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-arq</artifactId>
+            <version>4.10.0</version>
+        </dependency>
+
+        <!-- Jena SHACL Implementation: The actual validator engine -->
+        <dependency>
+            <groupId>org.topbraid</groupId>
+            <artifactId>shacl</artifactId>
+            <version>1.4.0</version>
+        </dependency>
     </dependencies>
 
 </project>

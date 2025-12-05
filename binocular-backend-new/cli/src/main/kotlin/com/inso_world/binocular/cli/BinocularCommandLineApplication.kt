@@ -17,6 +17,8 @@ import org.springframework.shell.command.annotation.CommandScan
 @ComponentScan(
     basePackages = [
         "com.inso_world.binocular.cli",
+        "mapper",
+        "validation",
 //        make sure the ones below match the ones in WebApplication (and vice versa)
         "com.inso_world.binocular.core.persistence",
         "com.inso_world.binocular.core.service",

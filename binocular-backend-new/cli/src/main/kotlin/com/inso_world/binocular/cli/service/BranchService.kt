@@ -15,7 +15,7 @@ class BranchService (
     @Autowired private val userService: UserService,
 ) {
 
-    fun toBeNamed(branchId: String): BranchExportData {
+    fun getBranchExportData(branchId: String): BranchExportData {
         // 1. Fetch the Branch (nullable)
         val branch = getBranch(branchId)
 
@@ -66,7 +66,6 @@ class BranchService (
 
     // --- Helper function for returning a predictable empty DTO ---
     private fun createEmptyExportData(branchName: String, latestCommitSha: String): BranchExportData {
-        // This helper ensures your function always returns a valid, non-null BranchExportData
         return BranchExportData(
             branchName = branchName,
             latestCommitSha = latestCommitSha,
